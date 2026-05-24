@@ -10,7 +10,7 @@ derive_proc_macros = { path = "../derive_proc_macros" }
 collections = { path = "../../foundation/collections" }
 tracing = { version =  "0.1.44", default-features = false }
 tracing-subscriber = { version =  "0.3.23", optional = true }
-pastey = "0.2.2"
+pastey = "0.2.3"
 transport = { path = "../../foundation/transport", features = ["std", "tls", "tls1.2", "tls1.3", "rustls"], optional = true }
 traits = { path = "../../foundation/traits" }
 chrono = { version = "0.4.44", optional = true }
