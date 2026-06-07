@@ -13,7 +13,7 @@ tracing-subscriber = { version =  "0.3.23", optional = true }
 pastey = "0.2.3"
 transport = { path = "../../foundation/transport", features = ["std", "tls", "tls1.2", "tls1.3", "rustls"], optional = true }
 traits = { path = "../../foundation/traits" }
-chrono = { version = "0.4.44", optional = true }
+chrono = { version = "0.4.45", optional = true }
 fedauth = { path = "../fedauth", optional = true }
 interface = { path = "../interface", optional = true }
 
