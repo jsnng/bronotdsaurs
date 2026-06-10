@@ -1,8 +1,7 @@
 # Tabular Data Stream Protocol
 
-- a zero-alloc (span-based) by default and allocation on demand via [Decode](./decoder/traits.rs) trait, `no_std + alloc`-compatible pure-rust implementation of Microsoft's tabular data stream protocol.
-- Transport-agnostic; operates purely at the protocol layer. Implement the `Transport` trait to use it over TCP, TLS, MARS, or any async runtime.
-- Synchronous by default; async runtimes are supported via the `Transport` trait.
+- a span-based, `no_std + alloc`-compatible pure-rust implementation of Microsoft's tabular data stream protocol. Decoding is zero-alloc for result sets up to 32 columns (wider column metadata spills to the heap via a small-buffer optimization); owned values are allocated only on demand via the [Decode](./decoder/traits.rs) trait.
+- Transport-agnostic; operates purely at the protocol layer. Implement the `AsyncTransport` trait to use it over TCP, TLS, MARS, or any async runtime.
 - Intentionally kept as dependency-free as possible.
 
 > [!WARNING]
@@ -10,11 +9,11 @@
 
 # Example
 
-### 1. Implement `Transport`
+### 1. Implement `AsyncTransport`
 ```rust
 struct TcpTransport(TcpStream);
 
-impl Transport for TcpTransport {
+impl AsyncTransport for TcpTransport {
     type Error = std::io::Error;
     // ...
 }
@@ -35,15 +34,17 @@ let prelogin = PreLoginPacketBuilder::default()
   .build()
   .unwrap();
 
-let transition = session.transition(prelogin)?;
-match transition {
+match session.transition(prelogin).await? {
   InitialStateTransition::LoginReady(s) => {
     let login7 = Login7PacketBuilder::default()
-    .user_name("sa".to_string())
-    .password("password".to_string())
-    .server_name("localhost".to_string())
-    .build()?;
-    let session = s.transition(login7)?;
+      .user_name("sa".to_string())
+      .password("password".to_string())
+      .server_name("localhost".to_string())
+      .build()?;
+    match s.transition(login7).await? {
+      LoginReadyStateTransition::LoggedIn { session } => { /* ready to query */ }
+      LoginReadyStateTransition::AuthenticationRequired { session, errors } => { /* login failed */ }
+    }
   }
   #[cfg(feature = "tls")]
   InitialStateTransition::TlsSslNegotiation(s) => {
@@ -60,10 +61,12 @@ let sql_batch = SQLBatchBuilder::default()
     .sql_text("SELECT * FROM sys.tables".to_string()) 
     .build()?;
 
-session.query(
-  batch,
-  |col_metadata, rows| { /* col_metadata iterator to perform rows decoding */ }
-)?;
+let transition = session.query(
+  sql_batch,
+  Attention::new(),
+  |col_metadata| { /* column metadata received */ },
+  |col_metadata, row| { /* col_metadata iterator to perform row decoding */ },
+).await?;
 ```
 
 or `rpc` example:
@@ -73,11 +76,12 @@ let rpc = SpExecuteSqlBuilder::default()
     .stmt("SELECT @p1".to_string())
     .into_rpc_batch(AllHeaders::new(vec![]));
 
-session.send(rpc)?;  
-session.receive(
-  batch,
-  |col_metadata, rows| { /* col_metadata iterator to perform rows decoding */ }
-)?;
+let transition = session.execute(
+  rpc,
+  Attention::new(),
+  |col_metadata| { /* column metadata received */ },
+  |col_metadata, row| { /* col_metadata iterator to perform row decoding */ },
+).await?;
 ```
 
 # Features Flags
@@ -118,7 +122,7 @@ By default, this crate is `no_std`. To enable `std`, use the feature flag:
 Add to your `Cargo.toml`:
 ```toml
 [dependencies]
-bronotdsaurs = { git = "https://github.com/jsnng/rustds.git", features = ["tds7.4"] }
+bronotdsaurs = { git = "https://github.com/jsnng/bronotdsaurs.git", features = ["tds7.4"] }
 ```
 
 # Building

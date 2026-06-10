@@ -13,23 +13,6 @@ pub enum EncodeError {
     PreviousRowNotFlushed,
 }
 
-impl EncodeError {
-    #[track_caller]
-    pub fn buffer_too_small(required: usize, available: usize) -> Self {
-        Self::BufferTooSmall {
-            required,
-            available,
-            location: Location::caller(),
-        }
-    }
-
-    pub fn invalid_field() -> Self {
-        Self::InvalidField {
-            location: Location::caller(),
-        }
-    }
-}
-
 impl core::fmt::Display for EncodeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {

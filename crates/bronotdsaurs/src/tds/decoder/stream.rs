@@ -38,10 +38,7 @@ pub struct ContextRequired<'a> {
 
 pub trait Drainable {
     const TOKEN: u8;
-    /// N.B. In both implementations ([`Row`] and [`NbcRow`]) of [`Drainable`]
-    /// `usize::MAX` is used as a sentinel instead of `Option<usize>` to avoid the 
-    /// extra byte for the discriminant and the branching that comes with it
-    fn steps(buf: &[u8], strides: &[u8]) -> usize;
+    fn steps(buf: &[u8], strides: &[u8]) -> Option<usize>;
 }
 
 pub struct Row;
@@ -50,37 +47,37 @@ pub struct NbcRow;
 impl Drainable for Row {
     const TOKEN: u8 = 0xd1;
     #[inline(always)]
-    fn steps(buf: &[u8], strides: &[u8]) -> usize {
+    fn steps(buf: &[u8], strides: &[u8]) -> Option<usize> {
         let mut cursor = 1usize;
         for &stride in strides {
             match walk(buf, cursor, stride) {
                 Some(w) => cursor += w,
-                None => return usize::MAX,
+                None => return None,
             }
         }
-        if cursor > buf.len() { return usize::MAX; }
-        cursor
+        if cursor > buf.len() { return None; }
+        Some(cursor)
     }
 }
 
 impl Drainable for NbcRow {
     const TOKEN: u8 = 0xd2;
     #[inline(always)]
-    fn steps(buf: &[u8], strides: &[u8]) -> usize {
+    fn steps(buf: &[u8], strides: &[u8]) -> Option<usize> {
         let bitmap = strides.len().div_ceil(8);
         let mut cursor = 1 + bitmap;
-        if cursor > buf.len() { return usize::MAX; }
+        if cursor > buf.len() { return None }
         for (i, &stride) in strides.iter().enumerate() {
             let is_null = buf[1 + i / 8] >> (i % 8) & 1 == 1;
             if !is_null {
                 match walk(buf, cursor, stride) {
                     Some(w) => cursor += w,
-                    None => return usize::MAX,
+                    None => return None,
                 }
             }
         }
-        if cursor > buf.len() { return usize::MAX; }
-        cursor
+        if cursor > buf.len() { return None; }
+        Some(cursor)
     }
 }
 
@@ -275,9 +272,9 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
                 Row::TOKEN => Row::steps(buf, strides),
                 #[cfg(feature = "tds7.3b")]
                 NbcRow::TOKEN => NbcRow::steps(buf, strides),
-                _ => usize::MAX,
+                _ => None,
             };
-            if cursor != usize::MAX {
+            if let Some(cursor) = cursor  {
                 f(&buf[..cursor]);
                 buf = &buf[cursor..];
                 continue;
@@ -302,35 +299,40 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
         let mut buf = self.buf;
         loop {
             if buf.is_empty() {
-                return None;
+                return None
             }
             let ty = DataTokenType::LUT[buf[0] as usize];
             match ty {
                 DataTokenType::ROW => {
-                    let cursor = Row::steps(buf, self.state.col_metadata.strides_as_slice());
-                    return Some(ContextRequiredStep::Row(
-                        RowSpan {
-                            bytes: &buf[..cursor],
-                        },
-                        TokenDecoder {
-                            buf: &buf[cursor..],
-                            state: self.state,
-                        },
-                    ));
+                    if let Some(cursor) = Row::steps(buf, self.state.col_metadata.strides_as_slice()) {
+                        return Some(ContextRequiredStep::Row(
+                            RowSpan {
+                                bytes: &buf[..cursor],
+                            },
+                            TokenDecoder {
+                                buf: &buf[cursor..],
+                                state: self.state,
+                            },
+                        ));
+                    } else {
+                        return None
+                    }
                 }
                 #[cfg(feature = "tds7.3b")]
                 DataTokenType::NBC_ROW => {
-                    let cursor = NbcRow::steps(buf, self.state.col_metadata.strides_as_slice());
-                    #[cfg(feature = "tds7.3b")]
-                    return Some(ContextRequiredStep::NbcRow(
-                        NbcRowSpan {
-                            bytes: &buf[..cursor],
-                        },
-                        TokenDecoder {
-                            buf: &buf[cursor..],
-                            state: self.state,
-                        },
-                    ));
+                    if let Some(cursor) = NbcRow::steps(buf, self.state.col_metadata.strides_as_slice()) {
+                        return Some(ContextRequiredStep::NbcRow(
+                            NbcRowSpan {
+                                bytes: &buf[..cursor],
+                            },
+                            TokenDecoder {
+                                buf: &buf[cursor..],
+                                state: self.state,
+                            },
+                        ));
+                    } else {
+                        return None
+                    }
                 }
                 DataTokenType::DONE => {
                     let length = DoneSpan::FIXED_SPAN_SIZE;
@@ -557,5 +559,24 @@ mod tests {
         assert_eq!(val.interface(), capture[0x174]);
         assert_eq!(val.tds_version(), capture[0x175..0x179]);
         assert_eq!(val.prog_name(), *"Microsoft SQL Server\0\0");
+    }
+
+    #[test]
+    fn truncated_row_returns_none() {
+        let row = [0xd1, 0xde, 0xad, 0xbe, 0xef];
+        let col_metadata = ColMetaDataSpan::from_parts(&[0x01, 0x00], collections::SmallBytes::from_slice(&[4]));
+        let mut decoder: TokenDecoder<'_, ContextRequired<'_>> = TokenDecoder::resume(&row, col_metadata);
+        let ctx = decoder.advance();
+        if let Some(ContextRequiredStep::Row(span, next)) = ctx {
+            assert_eq!(span.bytes, &[0xd1, 0xde, 0xad, 0xbe, 0xef]);
+            decoder = next;
+        } else {
+            panic!("Expected Some(ContextRequiredStep::Row), got {:?}", ctx);
+        }
+        assert!(decoder.advance().is_none());
+
+        let col_metadata = ColMetaDataSpan::from_parts(&[0x01, 0x00], collections::SmallBytes::from_slice(&[4]));
+        let decoder: TokenDecoder<'_, ContextRequired<'_>> = TokenDecoder::resume(&row[..3], col_metadata);
+        assert!(decoder.advance().is_none());
     }
 }

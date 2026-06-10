@@ -38,6 +38,7 @@ impl RustlsConfig {
     }
 
     /// Trust the server certificate without verification.
+    /// N.B. Analogous to checking the "Trust server certificate" box in the connection properties in SSMS.
     pub fn new_trust_server_certificate() -> Self {
         let config = Arc::new(
             ClientConfig::builder_with_protocol_versions(&[
@@ -120,9 +121,7 @@ impl TlsHandshaker for RustlsConfig {
     }
 }
 
-// ---------------------------------------------------------------------------
 // RustlsProvider — wraps a transport + an established TLS connection
-// ---------------------------------------------------------------------------
 
 pub struct RustlsProvider<T: AsyncTransport> {
     transport: T,
@@ -203,9 +202,7 @@ where
     }
 }
 
-// ---------------------------------------------------------------------------
 // NoCertificateVerification
-// ---------------------------------------------------------------------------
 
 #[derive(Debug)]
 pub struct NoCertificateVerification;
