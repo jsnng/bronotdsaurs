@@ -5,7 +5,7 @@
 - Intentionally kept as dependency-free as possible.
 
 > [!WARNING]
-> This crate uses `unsafe` in performance-critical paths (e.g. the streaming decode buffer). These are documented and minimal, but this crate is not `#![forbid(unsafe_code)]`.
+> This crate uses `unsafe` in performance-critical paths (e.g. the streaming decode buffer) so it is not `#![forbid(unsafe_code)]`.
 
 # Example
 

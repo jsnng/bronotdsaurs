@@ -20,16 +20,18 @@ use crate::tds::session::prelude::*;
 #[cfg(kani)]
 const KANI_BUFFER_SIZE: usize = 64;
 
+#[cfg(not(kani))]
+const BUFFER_SIZE: usize = MAX_TDS_PACKET_BYTES;
+#[cfg(kani)]
+const BUFFER_SIZE: usize = KANI_BUFFER_SIZE;
+
 /// A resetable linear sliding window buffer.
 /// `head` and `tail` marks the start and end of unconsumed data respectively.
 /// data is written to `[tail..]` and consumed from `[head..tail]`.
 /// `reset()` is used to reset the buffer.
 #[derive(Debug)]
 pub struct SessionBuffer {
-    #[cfg(not(kani))]
-    buffer: [u8; MAX_TDS_PACKET_BYTES],
-    #[cfg(kani)]
-    buffer: [u8; KANI_BUFFER_SIZE],
+    buffer: [u8; BUFFER_SIZE],
     head: usize,
     tail: usize,
     size: Option<usize>,
@@ -38,10 +40,7 @@ pub struct SessionBuffer {
 impl Default for SessionBuffer {
     fn default() -> Self {
         Self {
-            #[cfg(not(kani))]
-            buffer: [0u8; MAX_TDS_PACKET_BYTES],
-            #[cfg(kani)]
-            buffer: [0u8; KANI_BUFFER_SIZE],
+            buffer: [0u8; BUFFER_SIZE],
             head: 0,
             tail: 0,
             size: None,
@@ -59,7 +58,7 @@ impl SessionBuffer {
     /// return the slice of the buffer available for writing: `buffer[tail..]`:
     #[inline(always)]
     pub fn writeable(&mut self) -> &mut [u8] {
-        let max_size = self.size.unwrap_or(MAX_TDS_PACKET_BYTES);
+        let max_size = self.buffer_size();
         &mut self.buffer[self.tail..max_size]
     }
 
@@ -82,10 +81,10 @@ impl SessionBuffer {
         Ok(())
     }
 
-    /// move tail cursor by `n`. Errors if the move exceeds `size` if `size.is_some()` or `MAX_TDS_PACKET_BYTES`
+    /// move tail cursor by `n`. Errors if the move exceeds `size` if `size.is_some()` or `BUFFER_SIZE`
     #[inline(always)]
     pub fn tail(&mut self, n: usize) -> Result<(), SessionError> {
-        let max_size = self.size.unwrap_or(MAX_TDS_PACKET_BYTES);
+        let max_size = self.buffer_size();
         if self.tail + n > max_size {
             return Err(SessionError::BufferIndexOutOfBoundsError(
                 #[cfg(not(kani))]
@@ -121,18 +120,19 @@ impl SessionBuffer {
         self.tail = 0;
     }
 
-    /// changes the maximum size of the writeable section to `size`. Errors if `size > MAX_TDS_PACKET_BYTES`.
+    /// changes the maximum size of the writeable section to `size`. Errors if `size > BUFFER_SIZE`.
     pub fn set_buffer_maximum_size(&mut self, size: usize) -> Result<(), SessionError> {
-        if size > MAX_TDS_PACKET_BYTES {
+        if size > BUFFER_SIZE {
             return Err(SessionError::RequestedPacketSizeTooLarge);
         }
         self.size = Some(size);
         Ok(())
     }
 
+    /// the current maximum writeable size: the negotiated `size`, or `BUFFER_SIZE` if unset.
     #[inline(always)]
     pub fn buffer_size(&self) -> usize {
-        self.size.unwrap_or(MAX_TDS_PACKET_BYTES)
+        self.size.unwrap_or(BUFFER_SIZE)
     }
 }
 
@@ -224,21 +224,20 @@ impl From<String> for SessionError {
     }
 }
 
-// #[cfg(kani)]
-// #[kani::proof]
-// fn session_buffer_writable_cant_exceed_max_tds_packet_size() {
-//     let mut buffer = SessionBuffer::default();
-//     let tail: usize = kani::any();
-//     kani::assume(tail <= MAX_TDS_PACKET_BYTES);
-//     buffer.tail(tail);
+#[cfg(kani)]
+#[kani::proof]
+fn session_buffer_writable_cant_exceed_max_tds_packet_size() {
+    let mut buffer = SessionBuffer::default();
+    let tail: usize = kani::any();
+    kani::assume(tail <= BUFFER_SIZE);
+    buffer.tail(tail).unwrap();
 
-//     let use_max_size: bool = kani::any();
-//     if use_max_size {
-//         let size: usize = kani::any();
-//         kani::assume(size <= MAX_TDS_PACKET_BYTES);
-//         kani::assume(tail <= size);
-//         buffer.set_buffer_maximum_size(size).unwrap();
-//     }
-
-//     assert!(buffer.writeable().len() <= MAX_TDS_PACKET_BYTES)
-// }
+    let use_max_size: bool = kani::any();
+    if use_max_size {
+        let size: usize = kani::any();
+        kani::assume(size <= BUFFER_SIZE);
+        kani::assume(tail <= size);
+        buffer.set_buffer_maximum_size(size).unwrap();
+    }
+    assert!(buffer.writeable().len() <= BUFFER_SIZE)
+}

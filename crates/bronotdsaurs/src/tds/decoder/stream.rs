@@ -148,12 +148,17 @@ impl<'a> TokenDecoder<'a, NoContext> {
             let ty = DataTokenType::LUT[buf[0] as usize];
             match ty {
                 DataTokenType::COL_METADATA => {
-                    let col_metadata = ColMetaDataSpan::new(&buf[1..]);
-                    let length = 1 + col_metadata.bytes.len();
-                    return Some(NoContextStep::ContextRequired(TokenDecoder {
-                        buf: &buf[length..],
-                        state: ContextRequired { col_metadata },
-                    }));
+                    if let Ok(col_metadata) = ColMetaDataSpan::new(&buf[1..]) {
+                        let length = 1 + col_metadata.bytes.len();
+                        return Some(NoContextStep::ContextRequired(TokenDecoder {
+                            buf: &buf[length..],
+                            state: ContextRequired { col_metadata },
+                        }));
+                    } else {
+                        return Some(NoContextStep::Error(DecodeError::InvalidColMetaData(
+                            "Failed to parse COL_METADATA".to_string(),
+                        )));
+                    }
                 }
                 DataTokenType::DONE => {
                     let cursor = DoneSpan::FIXED_SPAN_SIZE;
@@ -239,9 +244,15 @@ impl<'a> TokenDecoder<'a, NoContext> {
 }
 
 impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
+    /// Consumes the decoder and returns the column metadata span it was carrying.
+    ///
+    /// The span still borrows the underlying stream buffer (`'a`), so it is only
+    /// valid until the next buffer refill — call `.own()` on it to keep the
+    /// metadata across refills, then use [`TokenDecoder::resume`] to continue
+    /// row decoding with it.
     #[inline(always)]
-    pub fn col_metadata(&self) -> ColMetaDataSpan<'a> {
-        self.state.col_metadata.clone()
+    pub fn into_col_metadata(self) -> ColMetaDataSpan<'a> {
+        self.state.col_metadata
     }
 
     /// Reconstructs a `ContextRequired` decoder positioned at `buf` using the given column

@@ -10,6 +10,7 @@ pub enum DecodeError {
     InvalidData(String),
     InvalidDataTokenType(String),
     InvalidEnvChangeType(String),
+    InvalidColMetaData(String)
 }
 
 impl core::fmt::Display for DecodeError {
@@ -23,6 +24,7 @@ impl core::fmt::Display for DecodeError {
             DecodeError::InvalidData(x) => write!(f, "Invalid data: {}", x),
             DecodeError::InvalidDataTokenType(x) => write!(f, "Invalid data token type: {}", x),
             DecodeError::InvalidEnvChangeType(x) => write!(f, "Invalid env change type: {}", x),
+            DecodeError::InvalidColMetaData(x) => write!(f, "Invalid column metadata: {}", x),
         }
     }
 }

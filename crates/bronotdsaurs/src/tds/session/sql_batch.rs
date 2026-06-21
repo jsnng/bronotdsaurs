@@ -330,7 +330,7 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<LoggedInState, T, O> {
                         decoder = next;
                     }
                     Some(NoContextStep::ContextRequired(ctx)) => {
-                        let col_metadata_span = ctx.col_metadata();
+                        let col_metadata_span = ctx.into_col_metadata();
                         head += 1 + col_metadata_span.bytes.len();
                         buf.head = head;
                         let col_metadata = col_metadata_span.own();

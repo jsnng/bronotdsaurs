@@ -322,12 +322,25 @@ impl<'a> Decode<'a> for SessionStatusSpan<'a> {
     type Span = SessionStatusSpan<'a>;
     type Error = DecodeError;
 
-    fn populate(_buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
-        todo!();
+    fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
+        SessionStatusSpan::new(buf)
     }
 
     fn own(self) -> Self::Owned {
-        todo!()
+        let dataset: Vec<SessionStatusData> = self.into_iter()
+        .map(|x| SessionStatusData {
+            state_id: x.state_id,
+            state_value: x.state_value.to_vec()
+        })
+        .collect();
+
+        SessionStatusToken {
+            ty: self.ty(),
+            length: self.length(),
+            seq_no: self.seq_no(),
+            status: self.status(),
+            session_state_dataset: SessionStatusDataset(dataset),
+        }
     }
 }
 

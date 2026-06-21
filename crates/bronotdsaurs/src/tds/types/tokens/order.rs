@@ -10,7 +10,7 @@ pub struct OrderToken {
 impl<'a> OrderSpan<'a> {
 
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
-        if bytes.len() < 3 {
+     if bytes.len() < 3 {
             return Err(DecodeError::InvalidData("".to_string()));
         }
         let length = r_u16_le(bytes, 1);

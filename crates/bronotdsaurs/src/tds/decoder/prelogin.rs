@@ -1,7 +1,6 @@
 use crate::tds::prelude::*;
 
 /// Implementation of [`Decode`] for [`PreLogin`](crate::tds::types::prelude::PreLoginSpan).
-/// Unavailable under `tds8.0`.
 #[cfg(not(feature = "tds8.0"))]
 impl<'a> Decode<'a> for PreLoginSpan<'a> {
     type Owned = PreLoginPacket;

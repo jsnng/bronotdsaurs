@@ -24,10 +24,10 @@ impl<'a> TableValuedParameterSpan<'a> {
     pub const TVP_COLUMN_ORDERING_TOKEN: u8 = 0x11;
     pub const TVP_ROW_TOKEN: u8 = 0x10;
 
-    pub fn new(buffer: &'a [u8]) -> Self {
+    pub fn new(buffer: &'a [u8]) -> Result<Self, DecodeError> {
         let typename = TVPTypeNameSpan { bytes: buffer };
         let ib_col_metadata = typename.ib_type_name() + typename.cch_type_name() * 2;
-        let col_metadata = ColMetaDataSpan::new(&buffer[ib_col_metadata..]);
+        let col_metadata = ColMetaDataSpan::new(&buffer[ib_col_metadata..])?;
         let mut cursor = ib_col_metadata + col_metadata.bytes.len();
         let mut order_unique = None;
         let mut column_ordering = None;
@@ -65,14 +65,14 @@ impl<'a> TableValuedParameterSpan<'a> {
         }
         let ib_rows = cursor;
 
-        Self {
+        Ok(Self {
             bytes: buffer,
             typename,
             col_metadata,
             order_unique,
             column_ordering,
             ib_rows,
-        }
+        })
     }
 
     #[inline(always)]

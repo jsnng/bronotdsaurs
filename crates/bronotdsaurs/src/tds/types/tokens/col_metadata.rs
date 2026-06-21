@@ -167,7 +167,10 @@ pub struct ColMetaDataOwned {
 impl<'a> ColMetaDataSpan<'a> {
     pub const STRIDE_VARIABLE_MASK: u8 = 0x80;
 
-    pub fn new(bytes: &'a [u8]) -> Self {
+    pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
+        if bytes.len() < 2 {
+            return Err(DecodeError::InvalidColMetaData("col_metadata too small".to_string()));
+        }
         let count = r_u16_le(bytes, 0) as usize;
         let mut ib = 2usize;
         let strides = SmallBytes::<32>::fill_with(count, |_| {
@@ -178,10 +181,10 @@ impl<'a> ColMetaDataSpan<'a> {
             ib = ib_cch_col_name + 1 + cch_col_name * 2;
             item.stride
         });
-        Self {
+        Ok(Self {
             bytes: &bytes[..ib],
             strides,
-        }
+        })
     }
 
     #[inline(always)]
@@ -434,8 +437,34 @@ impl ColMetaDataItemBuilder {
     }
 }
 
+#[cfg(kani)]
+#[kani::proof]
+fn proof_col_metadata_span_short_input_is_err() {
+    let bytes: [u8; 1] = kani::any();
+    assert!(ColMetaDataSpan::new(&bytes).is_err());
+}
+
+/// Contract: `ColMetaDataSpan::new` must never panic on arbitrary wire input —
+/// truncated or corrupt COL_METADATA must surface as `Err`, and any `Ok` span
+/// must lie within the input it was parsed from.
+#[cfg(kani)]
+#[kani::proof]
+#[kani::unwind(8)]
+fn proof_col_metadata_span_new_never_panics() {
+    let bytes: [u8; 16] = kani::any();
+    let slice = kani::slice::any_slice_of_array(&bytes);
+    if slice.len() >= 2 {
+        // keep the wire-declared column count small so the parse loop unwinds;
+        // truncation bugs reproduce at any count >= 1
+        kani::assume(slice[0] <= 4 && slice[1] == 0);
+    }
+    if let Ok(span) = ColMetaDataSpan::new(slice) {
+        assert!(span.byte_len() <= slice.len());
+    }
+}
+
 impl ColMetaDataItem {
-    /// # Note
+    /// # SAFETY:
     /// [`ColMetaDataItemBuilder::validate`] guarantees `crypto_meta_data` is Some when `f_encrypted` is set.
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(5);

@@ -1,5 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
+#[cfg(kani)]
+extern crate kani;
 
 use alloc::vec::Vec;
 use alloc::vec;
