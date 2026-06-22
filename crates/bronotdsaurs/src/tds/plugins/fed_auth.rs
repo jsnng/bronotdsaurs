@@ -13,9 +13,9 @@ pub trait FederatedAuthenticationPlugin {
 }
 
 #[cfg(feature = "fedauth")]
-impl FederatedAuthenticationPlugin for auth::fed_auth::FedAuth {
+impl FederatedAuthenticationPlugin for fedauth::fed_auth::FedAuthPlugin {
     fn acquire(&self) -> Option<FedAuthBytes> {
-        let token = self.acquire()?;
+        let token = self.acquire().ok()?;
         Some(FedAuthBytes { fed_auth_token: token, nonce: self.nonce })
     }
     fn nonce(&self) -> Option<[u8; 32]> {

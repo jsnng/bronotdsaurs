@@ -5,8 +5,8 @@
 > [!WARNING]
 > The public API is unstable and will change frequently. Expect breaking changes between any two commits until v1.0.0. Pin to a specific git revision if you wish to depend on it.
 
-> [!WARNING]
-> This project is functional in that the core TDS flows are implemented but it should be considered "early development". However, please consider this project to be not actively maintained; I may continue adding features, triage issues, review PRs, and fix bugs when I feel like it, but it shouldn't be read as a commitment. I've published it in the hopes that someone finds it useful. If you'd like to maintain it, open an issue to chat or just fork it.
+> [!NOTE]
+> This project is functional in that the core TDS flows are implemented but it should be considered "early development".
 
 # Layout
 
