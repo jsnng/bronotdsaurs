@@ -120,7 +120,7 @@ mod tests {
         let n = prelogin
             .oneshot(&mut buf, &mut header)
             .expect("prelogin.encode() failed?");
-        let _ = buf.tail(n);
+        let _n = buf.tail(n);
         println!("{}", n);
         let readable = &buf.readable()[..n];
         println!("{:?}", readable);

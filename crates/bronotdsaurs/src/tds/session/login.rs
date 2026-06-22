@@ -142,6 +142,9 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<LoginReadyState, T, O> {
                 }
                 #[cfg(feature = "tds7.4")]
                 Some(NoContextStep::FeatureExtAck(_, next)) => decoder = next,
+                #[cfg(feature = "tds7.4")]
+                Some(NoContextStep::SessionState(_, next)) => decoder = next,
+                Some(NoContextStep::Sspi(_, next)) => decoder = next,
                 Some(NoContextStep::Done(_, _)) | Some(NoContextStep::Error(_)) | None => break,
                 _ => unreachable!()
             }

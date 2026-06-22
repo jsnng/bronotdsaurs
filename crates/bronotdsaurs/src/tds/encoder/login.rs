@@ -430,7 +430,7 @@ mod tests {
             .oneshot(&mut buffer, &mut Login7Header::default())
             .expect("login7.encode() failed?");
         // assert_eq!(login7.header().as_ref().unwrap_or(&Login7Header::default()).length, n as u16);
-        let _ = buffer.tail(n);
+        let _n = buffer.tail(n);
         let readable = &buffer.readable()[..n];
 
         for (i, (c_chunk, e_chunk)) in capture.chunks(16).zip(readable.chunks(16)).enumerate() {
@@ -531,7 +531,7 @@ mod tests {
             )
             .expect("login7.encode() failed?");
 
-        let _ = buffer.tail(n);
+        let _n = buffer.tail(n);
         let readable = &buffer.readable()[..n];
 
         for (i, (c_chunk, e_chunk)) in example.chunks(16).zip(readable.chunks(16)).enumerate() {

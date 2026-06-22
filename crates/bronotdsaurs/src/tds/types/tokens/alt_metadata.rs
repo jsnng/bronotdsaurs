@@ -20,7 +20,7 @@ pub struct AltMetaDataSpan<'a> {
 
 impl<'a> AltMetaDataSpan<'a> {
     pub const FIXED_SPAN_OFFSET: usize = 6;
-    fn new(bytes: &'a [u8]) -> Self {
+    pub fn new(bytes: &'a [u8]) -> Self {
         let cch_by_cols = bytes[5] as usize;
         let ib_parts = AltMetaDataSpan::FIXED_SPAN_OFFSET + cch_by_cols * 2;
         let ib_part_name = ib_parts + 1;
@@ -49,6 +49,44 @@ impl<'a> AltMetaDataSpan<'a> {
     fn num_parts(&self) -> u8 {
         self.bytes[self.ib_part_name - 1]
     }
+}
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, TryFromIntoFormat)]
+enum AggregateOperator {
+    StdDev = 0x30,
+    StdDevP = 0x31,
+    Var = 0x32,
+    VarP = 0x33,
+    Count = 0x4b,
+    Sum = 0x4d,
+    Avg = 0x4f,
+    Min = 0x51,
+    Max = 0x52,
+}
 
+struct ComputeData {
+    op: AggregateOperator,
+    operand: u16,
+    #[cfg(feature = "tds7.2")]
+    user_type: u32,
+    #[cfg(not(feature = "tds7.2"))]
+    user_type: u16,
+    flags: u8,
+
+}
+
+struct ComputeDataFlag {
+    f_nullable: bool,
+    f_case_sen: bool,
+    us_updateable: u8,
+    f_indentity: bool,
+    #[cfg(feature = "tds7.2")]
+    f_compute: bool,
+    #[cfg(feature = "tds7.2")]
+    f_fixed_len_clr_type: bool,
+}
+
+impl ComputeDataFlag {
+    
 }

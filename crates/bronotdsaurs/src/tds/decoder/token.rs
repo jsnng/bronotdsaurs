@@ -7,7 +7,8 @@ impl<'a> Decode<'a> for AltMetaDataSpan<'a> {
     type Span = AltMetaDataSpan<'a>;
     type Error = DecodeError;
     fn populate(_buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
-        todo!();
+        todo!()
+        // Ok(AltMetaDataSpan::new(buf))
     }
     fn own(self) -> Self::Owned {
         todo!()
@@ -340,6 +341,24 @@ impl<'a> Decode<'a> for SessionStatusSpan<'a> {
             seq_no: self.seq_no(),
             status: self.status(),
             session_state_dataset: SessionStatusDataset(dataset),
+        }
+    }
+}
+
+/// Implementation of [`Decode`] for [`SspiSpan`].
+impl<'a> Decode<'a> for SspiSpan<'a> {
+    type Owned = SspiToken;
+    type Error = DecodeError;
+    type Span = SspiSpan<'a>;
+
+    fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
+        SspiSpan::new(buf)
+    }
+
+    fn own(self) -> Self::Owned {
+        SspiToken {
+            ty:  self.ty(),
+            sspi_buffer: self.sspi_buffer().to_vec()
         }
     }
 }

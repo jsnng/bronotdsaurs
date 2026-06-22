@@ -289,6 +289,15 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<LoggedInState, T, O> {
                         head += span.bytes.len();
                         decoder = next;
                     }
+                    #[cfg(feature = "tds7.4")]
+                    Some(NoContextStep::SessionState(span, next)) => {
+                        head += span.bytes.len();
+                        decoder = next;
+                    }
+                    Some(NoContextStep::Sspi(span, next)) => {
+                        head += span.bytes.len();
+                        decoder = next;
+                    }
                     Some(NoContextStep::ServerError(span, next)) => {
                         head += span.bytes.len();
                         errors.push(span.own());

@@ -64,6 +64,9 @@ fn drain_all(mut decoder: TokenDecoder<'_, bronotdsaurs::tds::decoder::stream::N
                     | NoContextStep::Done(_, next) => decoder = next,
                     #[cfg(feature = "tds7.4")]
                     NoContextStep::FeatureExtAck(_, next) => decoder = next,
+                    #[cfg(feature = "tds7.4")]
+                    NoContextStep::SessionState(_, next) => decoder = next,
+                    NoContextStep::Sspi(_, next) => decoder = next,
                     NoContextStep::ContextRequired(_) | NoContextStep::Error(_) => return count,
                 }
             }

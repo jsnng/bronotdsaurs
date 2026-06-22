@@ -31,7 +31,9 @@ impl Attention {
     const SENT: u8 = 2;
     pub fn new() -> Self { Self::default() }
     pub fn signal(&self) {
-        let _ = self.0.compare_exchange(Attention::IDLE,Attention::REQUESTED, Ordering::AcqRel, Ordering::Acquire);
+        // Best-effort IDLE -> REQUESTED; a failed CAS just means attention was
+        // already requested or sent, which is fine to ignore.
+        let _prev = self.0.compare_exchange(Attention::IDLE, Attention::REQUESTED, Ordering::AcqRel, Ordering::Acquire);
     }
     pub(crate) fn take(&self) -> bool {
         self.0.compare_exchange(Attention::REQUESTED,Attention::SENT, Ordering::AcqRel, Ordering::Acquire).is_ok()

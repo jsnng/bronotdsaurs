@@ -33,4 +33,10 @@ pub struct ComputeData {
     pub(crate) _col_name: Vec<u16>,
 }
 
-impl<'a> AltRowSpan<'a> {}
+impl<'a> AltRowSpan<'a> {
+    pub fn new() -> Result<Self, DecodeError> {
+        todo!()
+    }
+
+    pub fn ty(&self) -> u8 { self.bytes[0] }
+}

@@ -87,6 +87,10 @@ impl DataTokenType {
         x[DataTokenType::ReturnValue as usize] = DataTokenType::RETURN_VALUE;
         x[DataTokenType::ColInfo as usize] = DataTokenType::COL_INFO;
         x[DataTokenType::TabName as usize] = DataTokenType::TAB_NAME;
+        #[cfg(feature = "tds7.4")] {
+            x[DataTokenType::SessionState as usize] = DataTokenType::SESSION_STATE;
+        }
+        x[DataTokenType::Sspi as usize] = DataTokenType::SSPI;
         x
     };
     pub const UNKNOWN: u8 = 0;
@@ -104,6 +108,9 @@ impl DataTokenType {
     pub const RETURN_VALUE: u8 = 11;
     pub const COL_INFO: u8 = 12;
     pub const TAB_NAME: u8 = 13;
+    #[cfg(feature = "tds7.4")]
+    pub const SESSION_STATE: u8 = 14;
+    pub const SSPI: u8 = 15;
 }
 
 impl<'a> BVarBytesSpan<'a> {

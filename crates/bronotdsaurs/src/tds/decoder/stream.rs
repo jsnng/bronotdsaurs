@@ -93,6 +93,9 @@ pub enum NoContextStep<'a> {
     Error(DecodeError),
     ReturnStatus(ReturnStatusSpan<'a>, TokenDecoder<'a, NoContext>),
     ReturnValue(ReturnValueSpan<'a>, TokenDecoder<'a, NoContext>),
+    #[cfg(feature = "tds7.4")]
+    SessionState(SessionStatusSpan<'a>, TokenDecoder<'a, NoContext>),
+    Sspi(SspiSpan<'a>, TokenDecoder<'a, NoContext>),
     // ColInfo(ColInfoSpan<'a>, TokenDecoder<'a, NoContext>),
 }
 
@@ -110,6 +113,9 @@ impl core::fmt::Debug for NoContextStep<'_> {
             Self::Error(e) => write!(f, "Error({:?})", e),
             Self::ReturnStatus(..) => write!(f, "ReturnStatus"),
             Self::ReturnValue(..) => write!(f, "ReturnValue"),
+            #[cfg(feature = "tds7.4")]
+            Self::SessionState(..) => write!(f, "SessionState"),
+            Self::Sspi(..) => write!(f, "Sspi"),
             // Self::ColInfo(..) => write!(f, "ColInfo"),
         }
     }
@@ -199,6 +205,20 @@ impl<'a> TokenDecoder<'a, NoContext> {
                         Err(e) => Some(NoContextStep::Error(e)),
                     };
                 }
+                #[cfg(feature = "tds7.4")]
+                DataTokenType::SESSION_STATE => {
+                    // SESSIONSTATE carries a u32 length, unlike the u16 tokens below.
+                    if buf.len() < 5 { return None; }
+                    let cursor = 5 + r_u32_le(buf, 1) as usize;
+                    if cursor > buf.len() { return None; }
+                    return Some(NoContextStep::SessionState(
+                        SessionStatusSpan { bytes: &buf[..cursor] },
+                        TokenDecoder {
+                            buf: &buf[cursor..],
+                            state: NoContext,
+                        },
+                    ));
+                }
                 _ => {
                     // All remaining NoContext tokens are VariableLength (u16 prefix)
                     if buf.len() < 3 { return None; }
@@ -229,6 +249,10 @@ impl<'a> TokenDecoder<'a, NoContext> {
                         #[cfg(feature = "tds7.4")]
                         DataTokenType::FEATURE_EXT_ACK => return Some(NoContextStep::FeatureExtAck(
                             FeatureExtAckSpan { bytes: span },
+                            next,
+                        )),
+                        DataTokenType::SSPI => return Some(NoContextStep::Sspi(
+                            SspiSpan { bytes: span },
                             next,
                         )),
                         _ => {
@@ -535,7 +559,7 @@ mod tests {
 
         let mut buf = SessionBuffer::default();
         buf.writeable()[..capture.len()].copy_from_slice(&capture);
-        let _ = buf.tail(capture.len());
+        let _n = buf.tail(capture.len());
         // println!("{:?}", capture.len());
 
         let mut login_ack = None;
