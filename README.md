@@ -11,7 +11,7 @@
 # Layout
 
 ```
- rustds/
+ bronotdsaurs/
  |--- crates/
  |    |--- bronotdsaurs/          # TDS protocol implementation
  |    |--- interface/             # unified database traits (Connection, Rows, Row)
