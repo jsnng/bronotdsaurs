@@ -166,20 +166,35 @@ pub struct ColMetaDataOwned {
 impl<'a> ColMetaDataSpan<'a> {
     pub const STRIDE_VARIABLE_MASK: u8 = 0x80;
 
+    #[cfg_attr(kani, kani::ensures(
+        |x: &Result<Self, DecodeError>|
+        x.as_ref().map_or(true, |v| v.bytes.len() >= 2 && v.bytes.len() <= bytes.len())
+    ))]
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < 2 {
-            return Err(DecodeError::InvalidColMetaData("col_metadata too small".to_string()));
+            return Err(kani_error_stubbed!(DecodeError::InvalidColMetaData("col_metadata too small".to_string())));
         }
         let count = r_u16_le(bytes, 0) as usize;
         let mut ib = 2usize;
+        let mut is_truncated = false;
         let strides = SmallBytes::<32>::fill_with(count, |_| {
             let ib_type = ib + ColMetaDataItemSpan::FIXED_DATA_OFFSET + 2;
-            let item = DTYPE_LUT[bytes[ib_type] as usize];
+            let Some(&ty) = bytes.get(ib_type) else {
+                is_truncated = true;
+                return 0
+            };
+            let item = DTYPE_LUT[ty as usize];
             let ib_cch_col_name = ib_type + 1 + item.cch_type_info as usize;
-            let cch_col_name = bytes[ib_cch_col_name] as usize;
-            ib = ib_cch_col_name + 1 + cch_col_name * 2;
+            let Some(&cch_col_name) = bytes.get(ib_cch_col_name) else {
+                is_truncated = true;
+                return 0
+            };
+            ib = ib_cch_col_name + 1 + cch_col_name as usize * 2;
             item.stride
         });
+        if is_truncated || ib > bytes.len() {
+            return Err(kani_error_stubbed!(DecodeError::InvalidColMetaData("col_metadata too small".to_string())));
+        }
         Ok(Self {
             bytes: &bytes[..ib],
             strides,

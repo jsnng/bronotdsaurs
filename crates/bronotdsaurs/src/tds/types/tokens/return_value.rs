@@ -35,7 +35,7 @@ pub struct ReturnValueToken {
 impl<'a> ReturnValueSpan<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < 4 {
-            return Err(DecodeError::InvalidData("ReturnValueSpan: insufficient bytes".to_string()));
+            return Err(kani_error_stubbed!(DecodeError::InvalidData("ReturnValueSpan: insufficient bytes".to_string())));
         }
         let cch_param_name = bytes[3] as usize;
         let ib_param_name = 4;
@@ -48,7 +48,7 @@ impl<'a> ReturnValueSpan<'a> {
         let ib_type_info = ib_flags + 2;
 
         if ib_type_info >= bytes.len() {
-            return Err(DecodeError::InvalidData("ReturnValueSpan: insufficient bytes for type_info".to_string()));
+            return Err(kani_error_stubbed!(DecodeError::InvalidData("ReturnValueSpan: insufficient bytes for type_info".to_string())));
         }
         let ty_id = bytes[ib_type_info];
         let ty_info: DtypeLUTEntry = DTYPE_LUT[ty_id as usize];

@@ -28,8 +28,12 @@ pub enum ColPropertyStatus {
 
 impl<'a> ColInfoSpan<'a> {
     pub const FIXED_SPAN_OFFSET: usize = 3;
+    // #[cfg_attr(kani, kani::ensures(
+    //     |x: &Result<Self, DecodeError>|
+    //     x.as_ref().map_or(true, |v| v.bytes.len() >= Self::FIXED_SPAN_SIZE)
+    // ))]
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
-        if bytes.len() < 3 { return Err(DecodeError::InvalidData("ColInfoSpan self.bytes < 3".to_string())) }
+        if bytes.len() < 3 { return Err(kani_error_stubbed!(DecodeError::InvalidData("ColInfoSpan self.bytes < 3".to_string()))) }
         Ok(Self { bytes })
     }
     pub fn ty(&self) -> u8 {
@@ -48,6 +52,16 @@ impl<'a> IntoIterator for ColInfoSpan<'a> {
     fn into_iter(self) -> Self::IntoIter {
         ColInfoSpanIter {
             bytes: &self.bytes[Self::FIXED_SPAN_OFFSET..],
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a ColInfoSpan<'a> {
+    type Item = ColInfoSpanItem<'a>;
+    type IntoIter = ColInfoSpanIter<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        ColInfoSpanIter {
+            bytes: &self.bytes[ColInfoSpan::FIXED_SPAN_OFFSET..],
         }
     }
 }
@@ -73,20 +87,22 @@ impl<'a> Iterator for ColInfoSpanIter<'a> {
     type Item = ColInfoSpanItem<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.bytes.is_empty() { return None }
+        if self.bytes.len() < 3 { return None }
         let status = self.bytes[2];
         let col_num = self.bytes[0] as usize;
         let table_num = self.bytes[1] as usize;
         let mut col_name = None;
         let mut cursor = 3;
         if status & 0x20 != 0 {
+            if self.bytes.len() < 5 { return None; }
             let cch_col_name = r_u16_le(self.bytes, 3);
             let ib_col_name = 5;
             cursor = ib_col_name + cch_col_name as usize *2;
             col_name = Some(
                 NVarCharSpan {
-                    bytes: &self.bytes[ib_col_name..cursor]
-                });
+                    bytes: self.bytes.get(ib_col_name..cursor)?
+                }
+            );
         }
 
         let item  = ColInfoSpanItem {
@@ -96,7 +112,7 @@ impl<'a> Iterator for ColInfoSpanIter<'a> {
             col_name,
         };
 
-        self.bytes = &self.bytes[cursor..];
+        self.bytes = self.bytes.get(cursor..)?;
         Some(item)
     }
 }

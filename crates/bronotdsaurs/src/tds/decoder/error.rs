@@ -2,7 +2,7 @@ use alloc::string::String;
 
 #[derive(Debug)]
 pub enum DecodeError {
-    KaniStubError,
+    KaniErrorStub,
     InvalidField(String),
     InvalidLength(String),
     InvalidPacketType(String),
@@ -16,7 +16,7 @@ pub enum DecodeError {
 impl core::fmt::Display for DecodeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            DecodeError::KaniStubError => write!(f, ""),
+            DecodeError::KaniErrorStub => write!(f, ""),
             DecodeError::InvalidField(x) => write!(f, "Invalid field: {}", x),
             DecodeError::InvalidLength(x) => write!(f, "Invalid length: {}", x),
             DecodeError::InvalidPacketType(x) => write!(f, "Invalid packet type: {}", x),

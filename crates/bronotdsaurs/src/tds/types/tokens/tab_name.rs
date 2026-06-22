@@ -15,7 +15,7 @@ pub struct TabNameTokenItem {
 
 impl<'a> TabNameSpan<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
-        if bytes.len() < 3 { return Err(DecodeError::InvalidData("TabNameSpan self.bytes < 3".to_string())) }
+        if bytes.len() < 3 { return Err(kani_error_stubbed!(DecodeError::InvalidData("TabNameSpan self.bytes < 3".to_string()))) }
         Ok(Self { bytes })
     }
     pub fn ty(&self) -> u8 {
@@ -47,6 +47,18 @@ impl<'a> IntoIterator for TabNameSpan<'a> {
     fn into_iter(self) -> Self::IntoIter {
         TabNameSpanIter {
             bytes: &self.bytes[Self::FIXED_SPAN_OFFSET..],
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a TabNameSpan<'a> {
+    type Item = TabNameSpanItem<'a>;
+
+    type IntoIter = TabNameSpanIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TabNameSpanIter {
+            bytes: &self.bytes[TabNameSpan::FIXED_SPAN_OFFSET..],
         }
     }
 }

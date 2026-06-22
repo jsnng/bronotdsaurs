@@ -110,7 +110,6 @@ impl<'a> PreLoginSpan<'a> {
         x.is_ok() == ((bytes.len() >= PreLoginHeader::LENGTH) &&
         ((bytes[0] == SERVER_PACKET_TYPE) || (bytes[0] == ClientMessageType::PreLogin))))
     )]
-    #[cfg(not(feature = "tds8.0"))]
     /// Creates a new `PreLoginSpan` for parsing the pre-login stream.
     /// Err is returned if:
     /// - `bytes` length is less than PreLoginHeader::LENGTH
@@ -120,27 +119,20 @@ impl<'a> PreLoginSpan<'a> {
             #[cfg(not(kani))]
             return Err(DecodeError::InvalidLength(format!("PreLoginSpan::new() bytes.len()={} < PreLoginHeader::LENGTH={}", bytes.len(), PreLoginHeader::LENGTH)));
             #[cfg(kani)]
-            return Err(DecodeError::KaniStubError)
+            return Err(DecodeError::KaniErrorStub)
         }
         if (bytes[0] != SERVER_PACKET_TYPE) &&
             (bytes[0] != ClientMessageType::PreLogin) {
             #[cfg(not(kani))]
             return Err(DecodeError::InvalidPacketType(format!("PreLoginSpan::new() unexpected packet type: 0x{:02x}", bytes[0])));
             #[cfg(kani)]
-            return Err(DecodeError::KaniStubError)
+            return Err(DecodeError::KaniErrorStub)
         }
         Ok(PreLoginSpan {
             bytes,
             ..Default::default()
         })
     }
-    #[cfg(feature = "tds8.0")]
-    #[inline(always)]
-    pub fn new(_bytes: &'a [u8]) -> Result<Self, DecodeError> {
-        unimplemented!();
-        // return Ok(Self { bytes })
-    }
-
     #[inline(always)]
     #[cfg_attr(kani, kani::requires(self.bytes.len() >= PreLoginHeader::LENGTH))]
     /// Parses the TDS stream header.

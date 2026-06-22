@@ -10,11 +10,11 @@ impl<'a> OrderSpan<'a> {
 
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
      if bytes.len() < 3 {
-            return Err(DecodeError::InvalidData("".to_string()));
+            return Err(kani_error_stubbed!(DecodeError::InvalidData("".to_string())));
         }
         let length = r_u16_le(bytes, 1);
         if bytes.len() != 3 + length as usize || !length.is_multiple_of(2){
-            return Err(DecodeError::InvalidData("".to_string()));
+            return Err(kani_error_stubbed!(DecodeError::InvalidData("".to_string())));
         }
         Ok(Self { bytes })
     }

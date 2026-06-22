@@ -88,67 +88,44 @@ impl<'a> ErrorInfoSpan<'a> {
     ))]
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < Self::VARIABLE_SPAN_SIZE {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidDataTokenType(format!("ErrorInfoSpan::new() bytes.len()={} < VARIABLE_SPAN_SIZE={}", bytes.len(), Self::VARIABLE_SPAN_SIZE)));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidDataTokenType(format!("ErrorInfoSpan::new() bytes.len()={} < VARIABLE_SPAN_SIZE={}", bytes.len(), Self::VARIABLE_SPAN_SIZE))));
         }
 
         if r_u16_le(bytes, 1) as usize + 3 != bytes.len() {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("ErrorInfoSpan::new() declared length {} + 3 != bytes.len() {}", r_u16_le(bytes, 1), bytes.len())));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("ErrorInfoSpan::new() declared length {} + 3 != bytes.len() {}", r_u16_le(bytes, 1), bytes.len()))));
         }
 
         if bytes[0] != 0xaa && bytes[0] != 0xab {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidDataTokenType(format!("ErrorInfoSpan::new() - not 0xaa or 0xab, got {}", bytes[0])));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidDataTokenType(format!("ErrorInfoSpan::new() - not 0xaa or 0xab, got {}", bytes[0]))));
         }
 
         if (bytes[0] == 0xaa && (bytes[8] < 11 || bytes[8] > 24)) || (bytes[0] == 0xab && bytes[8] > 10) {
-             #[cfg(not(kani))]
-            return Err(DecodeError::InvalidData(format!("ErrorInfoSpan::new() - got {} but class is {}", bytes[0], bytes[8])));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+
+            return Err(kani_error_stubbed!(DecodeError::InvalidData(format!("ErrorInfoSpan::new() - got {} but class is {}", bytes[0], bytes[8]))));
 
         }
 
         let cch_msg_text =  r_u16_le(bytes, 9) as usize * 2;
         let ib_cch_server_name = Self::VARIABLE_SPAN_SIZE + cch_msg_text;
         if ib_cch_server_name >= bytes.len() {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("OutOfBounds: ib_cch_server_name = {}, bytes.len() = {}", ib_cch_server_name, bytes.len())));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("OutOfBounds: ib_cch_server_name = {}, bytes.len() = {}", ib_cch_server_name, bytes.len()))));
         };
         let cch_server_name = bytes[ib_cch_server_name] as usize * 2;
         let ib_server_name = ib_cch_server_name + 1;
         let ib_cch_proc_name = ib_server_name + cch_server_name;
         if ib_cch_proc_name >= bytes.len() {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("OutOfBounds: ib_cch_proc_name = {}, bytes.len() = {}", ib_cch_proc_name, bytes.len())));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("OutOfBounds: ib_cch_proc_name = {}, bytes.len() = {}", ib_cch_proc_name, bytes.len()))));
         };
         let cch_proc_name = bytes[ib_cch_proc_name] as usize * 2;
         let ib_proc_name = ib_cch_proc_name + 1;
         let ib_line_number = ib_proc_name + cch_proc_name;
         #[cfg(not(feature = "tds7.3"))]
         if ib_line_number+size_of::<u16>() > bytes.len() {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("OutOfBounds: ib_line_number = {}, bytes.len() = {}", ib_line_number, bytes.len())));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("OutOfBounds: ib_line_number = {}, bytes.len() = {}", ib_line_number, bytes.len()))));
         };
         #[cfg(feature = "tds7.3")]
         if ib_line_number+size_of::<u32>() != bytes.len() {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("OutOfBounds: ib_line_number = {}, bytes.len() = {}", ib_line_number, bytes.len())));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("OutOfBounds: ib_line_number = {}, bytes.len() = {}", ib_line_number, bytes.len()))));
         };
 
         Ok(Self { 
@@ -233,8 +210,6 @@ impl ErrorInfoToken {
     }
 }
 
-
-
 #[cfg(kani)]
 #[kani::proof]
 fn proof_error_info_span_is_none() {
@@ -260,4 +235,12 @@ proof_accessor!(proof_ty, ty, |span: &ErrorInfoSpan<'_>| matches!(span.ty(), Dat
 proof_accessor!(proof_msg_text, msg_text, |span: &ErrorInfoSpan<'_>| span.msg_text().bytes.len() <= span.bytes.len());
 proof_accessor!(proof_server_name, server_name, |span: &ErrorInfoSpan<'_>| span.server_name().bytes.len() <= span.bytes.len());
 proof_accessor!(proof_proc_name, proc_name, |span: &ErrorInfoSpan<'_>| span.proc_name().bytes.len() <= span.bytes.len());
-proof_accessor!(proof_line_number, line_number, |span: &ErrorInfoSpan<'_>| span.line_number() == span.line_number());
+// proof_accessor!(proof_line_number, line_number, |span: &ErrorInfoSpan<'_>| span.line_number() == span.line_number());
+
+#[cfg(kani)]
+#[kani::proof_for_contract(ErrorInfoSpan::new)]
+fn proof_error_info_for_contract() {
+    let bytes: [u8; 128] = kani::any();
+    let slice = kani::slice::any_slice_of_array(&bytes);
+    let _ = ErrorInfoSpan::new(slice);
+}

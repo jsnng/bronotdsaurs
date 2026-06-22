@@ -117,3 +117,4 @@ impl<'a> DoneSpan<'a> {
         u64::from_le_bytes(self.bytes[5..13].try_into().unwrap())
     }
 }
+

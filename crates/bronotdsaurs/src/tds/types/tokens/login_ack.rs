@@ -40,31 +40,19 @@ impl<'a> LoginAckSpan<'a> {
     ))]
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < Self::MIN_SPAN_SIZE {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("LoginAckSpan::new() bytes.len()={} < MIN_SPAN_SIZE={}", bytes.len(), Self::MIN_SPAN_SIZE)));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("LoginAckSpan::new() bytes.len()={} < MIN_SPAN_SIZE={}", bytes.len(), Self::MIN_SPAN_SIZE))));
         }
         if bytes[0] != DataTokenType::LoginAck as u8 {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidData(format!("LoginAckSpan::new() DataTokenType={} != DataTokenType::LoginAck {}", bytes[0], DataTokenType::LoginAck)));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidData(format!("LoginAckSpan::new() DataTokenType={} != DataTokenType::LoginAck {}", bytes[0], DataTokenType::LoginAck))));
         }
         let cch_prog_name = bytes[8] as usize;
         if Self::MIN_SPAN_SIZE + cch_prog_name*2 > bytes.len() {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("LoginAckSpan::new() ib_prog_name={}+cch_prog_name={} > bytes.len()={}", Self::MIN_SPAN_SIZE, cch_prog_name, bytes.len())));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("LoginAckSpan::new() ib_prog_name={}+cch_prog_name={} > bytes.len()={}", Self::MIN_SPAN_SIZE, cch_prog_name, bytes.len()))));
         }
         let login_ack = Self { bytes };
         // length gives the token body size only. bytes includes ty (u8) and length (u16).
         if login_ack.length() as usize + 3 != bytes.len() {
-            #[cfg(not(kani))]
-            return Err(DecodeError::InvalidLength(format!("LoginAckSpan::new() length+3={} != bytes.len()={}", login_ack.length() as usize + 3, bytes.len())));
-            #[cfg(kani)]
-            return Err(DecodeError::KaniStubError);
+            return Err(kani_error_stubbed!(DecodeError::InvalidLength(format!("LoginAckSpan::new() length+3={} != bytes.len()={}", login_ack.length() as usize + 3, bytes.len()))));
         }
         Ok(login_ack)
     }

@@ -192,3 +192,9 @@ fn proof_nvarchar_span_is_valid() {
     let bytes: [u8; 4] = kani::any();
     let _ = NVarCharSpan::new(&bytes);
 }
+
+proof_constructor_never_panics!(proof_col_info_never_panics, ColInfoSpan, 16);
+proof_constructor_never_panics!(proof_order_never_panics, OrderSpan, 16);
+proof_constructor_never_panics!(proof_tab_name_never_panics, TabNameSpan, 16);
+#[cfg(feature = "tds7.3")]
+proof_constructor_never_panics!(proof_session_status_never_panics, SessionStatusSpan, 16);

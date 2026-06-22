@@ -1,7 +1,6 @@
 use crate::tds::prelude::*;
 
 /// Implementation of [`Decode`] for [`PreLogin`](crate::tds::types::prelude::PreLoginSpan).
-#[cfg(not(feature = "tds8.0"))]
 impl<'a> Decode<'a> for PreLoginSpan<'a> {
     type Owned = PreLoginPacket;
     type Error = DecodeError;
@@ -93,20 +92,5 @@ impl<'a> Decode<'a> for PreLoginSpan<'a> {
         }
         builder.payload(self.payload().to_vec());
         builder.build().unwrap()
-    }
-}
-
-
-#[cfg(feature = "tds8.0")]
-impl<'a> Decode<'a> for PreLoginSpan<'a> {
-    type Owned = PreLoginPacket;
-    type Error = DecodeError;
-    type Span = PreLoginSpan<'a>;
-    fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
-        todo!()
-    }
-
-    fn own(self) -> Self::Owned {
-        todo!()
     }
 }

@@ -8,9 +8,9 @@ pub struct SspiToken {
 
 impl<'a> SspiSpan<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
-        if bytes.len() < 3 { return Err(DecodeError::InvalidData("".to_string()))}
+        if bytes.len() < 3 { return Err(kani_error_stubbed!(DecodeError::InvalidData("".to_string())))}
         let length = r_u16_le(bytes, 1) as usize;
-        if bytes.len() != 3 + length { return Err(DecodeError::InvalidData("".to_string()))}
+        if bytes.len() != 3 + length { return Err(kani_error_stubbed!(DecodeError::InvalidData("".to_string())))}
         Ok(Self { bytes })
     }
 

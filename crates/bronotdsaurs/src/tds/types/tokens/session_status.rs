@@ -3,12 +3,12 @@ use crate::tds::prelude::*;
 impl<'a> SessionStatusSpan<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < 10 {
-            return Err(DecodeError::InvalidData("".to_string()))
+            return Err(kani_error_stubbed!(DecodeError::InvalidData("".to_string())))
         }
 
         let length =  r_u32_le(bytes, 1);
         if bytes.len() != 5 + length as usize {
-            return Err(DecodeError::InvalidData("".to_string()));
+            return Err(kani_error_stubbed!(DecodeError::InvalidData("".to_string())));
         }
 
         Ok(Self { bytes })
