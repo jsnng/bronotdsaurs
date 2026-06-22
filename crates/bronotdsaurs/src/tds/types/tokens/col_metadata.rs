@@ -1,4 +1,3 @@
-#![allow(unused)]
 use crate::tds::prelude::*;
 use collections::SmallBytes;
 
@@ -444,7 +443,7 @@ fn proof_col_metadata_span_short_input_is_err() {
     assert!(ColMetaDataSpan::new(&bytes).is_err());
 }
 
-/// Contract: `ColMetaDataSpan::new` must never panic on arbitrary wire input —
+/// Contract: `ColMetaDataSpan::new` must never panic on arbitrary wire input.
 /// truncated or corrupt COL_METADATA must surface as `Err`, and any `Ok` span
 /// must lie within the input it was parsed from.
 #[cfg(kani)]

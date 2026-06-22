@@ -1,4 +1,3 @@
-#![allow(unused)]
 use crate::tds::prelude::*;
 
 #[derive(Debug, Clone, Copy)]

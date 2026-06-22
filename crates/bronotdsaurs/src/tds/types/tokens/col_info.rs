@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::tds::prelude::*;
 
 #[derive(Debug, Clone, Builder)]

@@ -1,6 +1,5 @@
 use crate::tds::prelude::*;
 
-
 impl<'a> SessionStatusSpan<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < 10 {
