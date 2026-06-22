@@ -4,7 +4,6 @@ use crate::tds::prelude::*;
 extern crate kani;
 
 span!(
-    DataStreamHeaderSpan,
     QueryNotificationHeaderSpan,
     TraceActivityHeaderSpan,
     TransactionDescriptorHeaderSpan,
@@ -91,26 +90,6 @@ impl AllHeaders {
     }
 }
 
-#[derive(Debug, Clone, Builder)]
-#[builder(no_std, setter(strip_option))]
-pub struct DataStreamHeader {
-    pub(crate) _header_length: u32,                // dword
-    pub(crate) _header_type: DataStreamHeaderType, // ushort
-    pub(crate) _header_data: Vec<u8>,              // *byte
-}
-
-impl<'a> DataStreamHeaderSpan<'a> {
-    pub fn header_length(&self) -> u32 {
-        todo!()
-    }
-    pub fn header_type(&self) -> DataStreamHeaderType {
-        todo!()
-    }
-    pub fn header_data(&self) -> Vec<u8> {
-        todo!()
-    }
-}
-
 /// 2.2.5.3.1 Query Notifications Header
 #[derive(Debug, Clone, Builder)]
 #[builder(no_std, setter(strip_option))]
@@ -130,6 +109,7 @@ impl core::ops::BitAnd<QueryNotificationHeader> for u8 {
 }
 
 impl<'a> QueryNotificationHeaderSpan<'a> {
+    
     pub fn notify_id(&self) -> NVarCharSpan<'a> {
         todo!()
     }
@@ -173,11 +153,18 @@ impl TransactionDescriptorHeader {
 }
 
 impl<'a> TransactionDescriptorHeaderSpan<'a> {
-    pub fn outstanding_request_count(&self) -> u32 {
-        todo!()
+    pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
+        if bytes.len() != TransactionDescriptorHeader::LENGTH {
+            return Err(DecodeError::InvalidData("".to_string()))
+        }
+        Ok(Self { bytes })
     }
     pub fn transaction_descriptor(&self) -> u64 {
-        todo!()
+        u64::from_le_bytes([self.bytes[0], self.bytes[1], self.bytes[2], self.bytes[3],
+            self.bytes[4], self.bytes[5], self.bytes[6], self.bytes[7]])
+    }
+    pub fn outstanding_request_count(&self) -> u32 {
+        u32::from_le_bytes([self.bytes[8], self.bytes[9], self.bytes[10], self.bytes[11]])
     }
 }
 
@@ -208,6 +195,12 @@ impl TraceActivityHeader {
 
 #[cfg(feature = "tds7.4")]
 impl<'a> TraceActivityHeaderSpan<'a> {
+    pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
+        if bytes.len() < TraceActivityHeader::LENGTH {
+            return Err(DecodeError::InvalidData("".to_string()))
+        }
+        Ok(Self { bytes })
+    }
     #[inline(always)]
     pub fn guid_activity_id(&self) -> &'a [u8; 16] {
         self.bytes[..self.ib_activity_sequence()].try_into().unwrap()
