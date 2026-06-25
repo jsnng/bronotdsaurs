@@ -123,6 +123,7 @@ impl<'a> Iterator for TabNameSpanIter<'a> {
             let part_length = r_u16_le(self.bytes, cursor) as usize;
             cursor += 2 + part_length * 2;
         }
+        if cursor > self.bytes.len() { return None; }
 
         let item  = TabNameSpanItem {
             bytes: &self.bytes[..cursor],

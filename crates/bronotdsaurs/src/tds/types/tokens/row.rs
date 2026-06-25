@@ -67,7 +67,7 @@ pub const DTYPE_LUT: [DtypeLUTEntry; 256] = {
     // Variable BYTELEN (cch=1, stride=0x81) — b[0] is length, 0x00 = null
     x[VariableLengthDataType::Guid as usize] = e(1, 0x81, Some(|b| {
         if b[0] == 0x00 { return Some(ValueRef::Null); }
-        Some(ValueRef::Guid(b[1..17].try_into().ok()?))
+        Some(ValueRef::Guid(b.get(1..17)?.try_into().ok()?))
     }));
     x[VariableLengthDataType::IntN as usize] = e(1, 0x81, Some(|b| {
         if b[0] == 0x00 { return Some(ValueRef::Null); }

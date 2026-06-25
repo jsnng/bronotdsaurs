@@ -180,12 +180,15 @@ impl<'a> EnvChangeSpan<'a> {
             #[cfg(feature = "tds7.2")]
             Some(EnvChangeType::RESETCONNECTIONCompletionAck) => return Ok(0),
             #[cfg(feature = "tds7.2")]
-            Some(EnvChangeType::PromoteTransaction) => return Ok(r_u32_le(self.bytes, ib) as usize),
+            Some(EnvChangeType::PromoteTransaction) => return Ok(if ib + 4 <= self.bytes.len() { r_u32_le(self.bytes, ib) as usize } else { 0 }),
             #[cfg(feature = "tds7.4")]
             Some(EnvChangeType::SendRoutingInformation)
-            | Some(EnvChangeType::SendEnhancedRoutingInformation) => return Ok(r_u16_le(self.bytes, ib) as usize),
+            | Some(EnvChangeType::SendEnhancedRoutingInformation) => return Ok(if ib + 2 <= self.bytes.len() { r_u16_le(self.bytes, ib) as usize } else { 0 }),
             None => return Err(DecodeError::InvalidEnvChangeType(format!("unknown env change type byte: 0x{:02x}", self.bytes[3]))),
         };
+        if ib >= self.bytes.len() {
+            return Ok(0);
+        }
         Ok(self.bytes[ib] as usize * multiplier)
     }
 

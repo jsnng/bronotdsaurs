@@ -194,6 +194,7 @@ impl<'a> TokenDecoder<'a, NoContext> {
                     return match ReturnValueSpan::new(buf) {
                         Ok(span) => {
                             let cursor = span.byte_len();
+                            if cursor > buf.len() { return None; }
                             Some(NoContextStep::ReturnValue(
                                 span,
                                 TokenDecoder {

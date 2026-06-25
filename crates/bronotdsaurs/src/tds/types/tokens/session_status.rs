@@ -69,7 +69,7 @@ impl<'a> Iterator for SessionStatusIter<'a> {
         self.cursor += 1;
 
         let length = if length == 0xff {
-            let n = r_u32_le(self.bytes, self.cursor) as usize;
+            let n = u32::from_le_bytes(self.bytes.get(self.cursor..self.cursor + 4)?.try_into().ok()?) as usize;
             self.cursor += 4;
             n
         } else {

@@ -59,6 +59,10 @@ impl<'a> ReturnValueSpan<'a> {
         let ib_value = ib_crypto_metadata; // 0-size when not encrypted
         let cch_value = walk(bytes, ib_value, stride).unwrap_or(0);
 
+        if ib_value + cch_value > bytes.len() {
+            return Err(kani_error_stubbed!(DecodeError::InvalidData("ReturnValueSpan: value runs past buffer".to_string())));
+        }
+
         Ok(Self {
             bytes,
             ib_param_name,
