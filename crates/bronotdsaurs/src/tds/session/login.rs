@@ -46,13 +46,13 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<LoginReadyState, T, O> {
 
         let res = LoginResponse::new(&self.buffer.readable()[Login7Header::LENGTH..])?;
 
-        if let Some((protocol, host, port)) = res.routing {
+        if let Some(route) = res.routing {
             self.notify(Event::StateTransition {
                 from: "LoginReadyState",
                 to: "RoutingCompletedState",
             });
             return Ok(LoginReadyStateTransition::Routed {
-                session: self.with_state(RoutingCompletedState { protocol, host, port }),
+                session: self.with_state(RoutingCompletedState { route }),
             });
         }
 
@@ -112,7 +112,7 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<SpnegoNegotiationState, T, O
             let Some(token) = token else {
                 return Err(SessionError::Unimplemented);
             };
-            self.send(crate::tds::session::sspi::SspiMessage { token }).await?;
+            self.send(crate::tds::encoder::sspi::SspiMessage { token }).await?;
             self.receive().await?;
 
             let res = LoginResponse::new(&self.buffer.readable()[Login7Header::LENGTH..])?;

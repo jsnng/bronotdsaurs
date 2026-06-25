@@ -1,5 +1,7 @@
 use derive_builder::Builder;
 
+use crate::tds::session::routing::Routing;
+
 #[derive(Debug, Default)]
 pub struct InitialState;
 #[cfg(all(not(feature = "tds8.0"), feature = "tls"))]
@@ -34,9 +36,7 @@ pub struct SentAttentionState {
 }
 #[derive(Debug, Default)]
 pub struct RoutingCompletedState {
-    pub protocol: u8,
-    pub host: alloc::string::String,
-    pub port: u16,
+    pub route: Routing,
 }
 #[derive(Debug, Default)]
 pub struct FinalState;

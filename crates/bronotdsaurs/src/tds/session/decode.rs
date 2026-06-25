@@ -30,7 +30,7 @@ impl QueryResults {
 pub struct DecodeOutput {
     pub results: QueryResults,
     pub transaction_descriptor: Option<u64>,
-    pub routing: Option<(u8, String, u16)>,
+    pub routing: Option<Routing>,
 }
 
 #[derive(Debug, Default)]
@@ -39,7 +39,7 @@ pub struct LoginResponse {
     pub infos: Vec<ErrorInfoToken>,
     pub login_ack: bool,
     pub sspi_challenge: Option<Vec<u8>>,
-    pub routing: Option<(u8, String, u16)>,
+    pub routing: Option<Routing>,
     pub transaction_descriptor: u64,
     pub packet_size: Option<usize>,
 }
@@ -96,7 +96,7 @@ impl LoginResponse {
 fn apply_env_change(
     env_change_span: &crate::tds::prelude::EnvChangeSpan<'_>,
     transaction_descriptor: &mut Option<u64>,
-    routing: &mut Option<(u8, String, u16)>,
+    routing: &mut Option<Routing>,
 ) -> Result<(), SessionError> {
     match env_change_span.ty() {
         #[cfg(feature = "tds7.2")]
@@ -224,17 +224,18 @@ impl StreamingBuffer {
     }
 }
 
-#[inline]
-pub(in crate::tds::session) async fn decode_token_stream<T, M, F>(
-    stream: &mut T,
-    mut on_col_metadata: M,
-    mut on_row: F,
-) -> Result<DecodeOutput, SessionError>
-where
-    T: AsyncTransport,
-    M: FnMut(&ColMetaDataOwned),
-    F: for<'r> FnMut(&ColMetaDataOwned, &'r [u8]),
-{
+impl<S, T: AsyncTransport, O: Observer<Event>> Session<S, T, O> {
+    #[inline]
+    pub(in crate::tds::session) async fn decode_token_stream<M, F>(
+        &mut self,
+        mut on_col_metadata: M,
+        mut on_row: F,
+    ) -> Result<DecodeOutput, SessionError>
+    where
+        M: FnMut(&ColMetaDataOwned),
+        F: for<'r> FnMut(&ColMetaDataOwned, &'r [u8]),
+    {
+    let stream = &mut self.stream;
     let mut buf = StreamingBuffer::new();
     let mut results: Vec<QueryResult> = Vec::new();
     let mut errors: Vec<ErrorInfoToken> = Vec::with_capacity(4);
@@ -242,7 +243,7 @@ where
     let mut return_status: Option<ReturnStatusToken> = None;
     let mut done_token: Option<DoneToken> = None;
     let mut transaction_descriptor: Option<u64> = None;
-    let mut routing: Option<(u8, String, u16)> = None;
+    let mut routing: Option<Routing> = None;
 
     'outer: loop {
         if let Some(ref col_metadata) = col_metadata_owned {
@@ -427,4 +428,5 @@ where
         transaction_descriptor,
         routing,
     })
+    }
 }

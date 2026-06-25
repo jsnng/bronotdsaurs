@@ -18,6 +18,7 @@ pub use crate::tds::session::sspi::SspiProvider;
 #[cfg(feature = "fedauth")]
 pub use crate::tds::session::sspi::FedAuthProvider;
 pub use crate::tds::session::state::*;
+pub use crate::tds::session::routing::Routing;
 
 // Internal transport
 pub(in crate::tds::session) use crate::tds::session::timer::Timers;

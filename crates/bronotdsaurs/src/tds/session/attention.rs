@@ -1,5 +1,4 @@
 use crate::tds::prelude::*;
-use crate::tds::session::decode::decode_token_stream;
 use crate::tds::session::prelude::*;
 
 pub enum SentAttentionTransition<T, O> {
@@ -47,7 +46,7 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<SentAttentionState, T, O> {
         AsyncTransport::set_read_timeout(&mut self.stream, self.timers.cancel)
             .map_err(|_| SessionError::transport_read_error())?;
 
-        let output = decode_token_stream(&mut self.stream, on_col_metadata, on_row).await?;
+        let output = self.decode_token_stream(on_col_metadata, on_row).await?;
 
         self.notify(Event::StateTransition {
             from: "SentAttentionState",

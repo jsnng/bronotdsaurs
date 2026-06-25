@@ -1,7 +1,14 @@
 use crate::tds::prelude::*;
 use crate::tds::session::prelude::*;
 
-pub fn parse_routing(span: &EnvChangeSpan<'_>) -> Result<(u8, String, u16), SessionError> {
+#[derive(Debug, Clone, Default)]
+pub struct Routing {
+    pub protocol: u8,
+    pub host: String,
+    pub port: u16,
+}
+
+pub fn parse_routing(span: &EnvChangeSpan<'_>) -> Result<Routing, SessionError> {
     let bytes = span.bytes;
     if bytes.len() < 11 {
         return Err(SessionError::DecodeError(DecodeError::InvalidLength(
@@ -28,24 +35,24 @@ pub fn parse_routing(span: &EnvChangeSpan<'_>) -> Result<(u8, String, u16), Sess
     )
     .map(|r| r.unwrap_or(core::char::REPLACEMENT_CHARACTER))
     .collect();
-    Ok((protocol, host, port))
+    Ok(Routing { protocol, host, port })
 }
 
 impl<T: AsyncTransport, O: Observer<Event>> Session<RoutingCompletedState, T, O> {
     pub fn host(&self) -> &str {
-        &self.state.host
+        &self.state.route.host
     }
 
     pub fn port(&self) -> u16 {
-        self.state.port
+        self.state.route.port
     }
 
     pub fn protocol(&self) -> u8 {
-        self.state.protocol
+        self.state.route.protocol
     }
 
     pub fn into_route(self) -> (String, u16) {
-        (self.state.host, self.state.port)
+        (self.state.route.host, self.state.route.port)
     }
 
     pub fn disconnect(self) -> Session<FinalState, T, O> {

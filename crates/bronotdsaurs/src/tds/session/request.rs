@@ -1,5 +1,4 @@
 use crate::tds::prelude::*;
-use crate::tds::session::decode::decode_token_stream;
 use crate::tds::session::prelude::*;
 
 pub enum ClientRequestExecutionTransition<T, O> {
@@ -63,7 +62,7 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<ClientRequestExecutionState,
         AsyncTransport::set_read_timeout(&mut self.stream, self.timers.request)
             .map_err(|_| SessionError::transport_read_error())?;
 
-        let output = decode_token_stream(&mut self.stream, on_col_metadata, on_row).await?;
+        let output = self.decode_token_stream(on_col_metadata, on_row).await?;
 
         self.notify(Event::BytesReceived {
             heading: "QueryResponse",
@@ -75,7 +74,7 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<ClientRequestExecutionState,
             transaction_descriptor = td;
         }
 
-        if let Some((protocol, host, port)) = output.routing {
+        if let Some(route) = output.routing {
             self.notify(Event::StateTransition {
                 from: "ClientRequestExecutionState",
                 to: "RoutingCompletedState",
@@ -86,11 +85,7 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<ClientRequestExecutionState,
                     observer: self.observer,
                     timers: self.timers,
                     buffer: self.buffer,
-                    state: RoutingCompletedState {
-                        protocol,
-                        host,
-                        port,
-                    },
+                    state: RoutingCompletedState { route },
                 },
             });
         }
