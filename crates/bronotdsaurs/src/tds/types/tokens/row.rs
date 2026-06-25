@@ -162,6 +162,10 @@ pub const DTYPE_LUT: [DtypeLUTEntry; 256] = {
         if b[3] == 0xff && b[0] == 0xff && b[1] == 0xff && b[2] == 0xff { return Some(ValueRef::Null); }
         Some(ValueRef::NVarChar(&b[4..]))
     }));
+    x[VariableLengthDataType::Vector as usize] = e(3, 0x82, Some(|b| {
+        if b[1] == 0xff && b[0] == 0xff { return Some(ValueRef::Null); }
+        Some(ValueRef::Vector(vector::VectorSpan::new(&b[2..]).ok()?))
+    }));
     x
 };
 
@@ -191,4 +195,5 @@ pub enum ValueRef<'a> {
     VarBinary(&'a [u8]),
     Guid([u8; 16]),
     Decimal(&'a [u8]),
+    Vector(vector::VectorSpan<'a>),
 }

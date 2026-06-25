@@ -163,7 +163,7 @@ impl PartialEq<str> for NVarCharSpan<'_> {
 impl<'a> NVarCharSpan<'a> {
     #[inline(always)]
     // Pre: buf.len() % 2 == 0
-     #[cfg_attr(kani, kani::requires(buf.len() % 2 == 0))]
+    #[cfg_attr(kani, kani::requires(buf.len() % 2 == 0))]
     // Post: ptr::eq(y.bytes, buf) 
     #[cfg_attr(kani, kani::ensures(|x: &Self| core::ptr::eq(x.bytes, buf)))]
     pub fn new(buf: &'a [u8]) -> Self {

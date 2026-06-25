@@ -698,7 +698,14 @@ impl<'a> From<TypeInfoSpan<'a>> for TypeInfo {
                 VariableLengthDataType::Xml | VariableLengthDataType::Udt => unimplemented!(),
                 #[cfg(feature = "tds7.2")]
                 VariableLengthDataType::SsVariant => unimplemented!(),
-                VariableLengthDataType::Json | VariableLengthDataType::Vector => unimplemented!(),
+                VariableLengthDataType::Json => unimplemented!(),
+                VariableLengthDataType::Vector => Self {
+                    dtype: span.dtype,
+                    dtype_max_len: Some(TypeInfoVarLen::Ushort(r_u16_le(d, 0))),
+                    collation: None,
+                    precision: None,
+                    scale: Some(d[2]),
+                },
             },
         }
     }

@@ -247,10 +247,20 @@ impl<'a> TokenDecoder<'a, NoContext> {
                             Err(e) => Some(NoContextStep::Error(e)),
                         },
                         #[cfg(feature = "tds7.4")]
-                        DataTokenType::FEATURE_EXT_ACK => return Some(NoContextStep::FeatureExtAck(
-                            FeatureExtAckSpan { bytes: span },
-                            next,
-                        )),
+                        DataTokenType::FEATURE_EXT_ACK => {
+                            let mut idx = 1;
+                            loop {
+                                if idx >= buf.len() { return None }
+                                if buf[idx] == 0xff { idx += 1; break; }
+                                if idx + 5 > buf.len() { return None }
+                                idx += 5 + r_u32_le(buf, idx + 1) as usize
+                            }
+                            if idx > buf.len() { return None; }
+                            return Some(NoContextStep::FeatureExtAck(
+                                FeatureExtAckSpan { bytes: &buf[..idx]},
+                                TokenDecoder { buf: &buf[idx..], state: NoContext }
+                            ));
+                        },
                         DataTokenType::SSPI => return Some(NoContextStep::Sspi(
                             SspiSpan { bytes: span },
                             next,
@@ -613,5 +623,49 @@ mod tests {
         let col_metadata = ColMetaDataSpan::from_parts(&[0x01, 0x00], collections::SmallBytes::from_slice(&[4]));
         let decoder: TokenDecoder<'_, ContextRequired<'_>> = TokenDecoder::resume(&row[..3], col_metadata);
         assert!(decoder.advance().is_none());
+    }
+
+    #[test]
+    fn test_sql_batch_response_decode() {
+        let capture: [u8; 51] = [
+            0x04, 0x01, 0x00, 0x33, 0x00, 0x00, 0x01, 0x00, 0x81, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20,
+            0x00, 0xA7, 0x03, 0x00, 0x09, 0x04, 0xD0, 0x00, 0x34, 0x03, 0x62, 0x00, 0x61, 0x00, 0x72, 0x00,
+            0xD1, 0x03, 0x00, 0x66, 0x6F, 0x6F, 0xFD, 0x10, 0x00, 0xC1, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00,
+        ];
+
+        let mut buf = SessionBuffer::default();
+        buf.writeable()[..capture.len()].copy_from_slice(&capture);
+        let _n = buf.tail(capture.len());
+
+        let decoder = TokenDecoder::new(&buf.readable()[8..]);
+
+        let row_decoder = match decoder.advance() {
+            Some(NoContextStep::ContextRequired(next)) => {
+                let col_metadata = next.clone().into_col_metadata();
+                assert_eq!(col_metadata.count(), 1);
+                let column = (&col_metadata).into_iter().next().unwrap();
+                assert_eq!(column.ty(), 0xA7);
+                next
+            }
+            other => panic!("expected ContextRequired (COL_METADATA), got {:?}", other),
+        };
+
+        let done_decoder = match row_decoder.advance() {
+            Some(ContextRequiredStep::Row(span, next)) => {
+                assert_eq!(span.bytes, &[0xD1, 0x03, 0x00, 0x66, 0x6F, 0x6F]);
+                next
+            }
+            other => panic!("expected Row, got {:?}", other),
+        };
+
+        match done_decoder.advance() {
+            Some(ContextRequiredStep::Done(done, _)) => {
+                assert_eq!(done.status() & DoneStatus::Count as u16, DoneStatus::Count as u16);
+                assert_eq!(done.current_cmd(), 0x00C1);
+                assert_eq!(done.done_row_count(), 1);
+            }
+            other => panic!("expected Done, got {:?}", other),
+        }
     }
 }

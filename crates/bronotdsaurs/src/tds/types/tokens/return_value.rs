@@ -57,7 +57,6 @@ impl<'a> ReturnValueSpan<'a> {
 
         let ib_crypto_metadata = ib_type_info + 1 + cch_type_info;
         let ib_value = ib_crypto_metadata; // 0-size when not encrypted
-
         let cch_value = walk(bytes, ib_value, stride).unwrap_or(0);
 
         Ok(Self {

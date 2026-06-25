@@ -7,7 +7,7 @@ extern crate kani;
 tds_packet_header!(Login7Header, ClientMessageType::TDS7Login);
 
 #[cfg(feature = "tds7.4")]
-span!(FeatureAckOptSpan);
+span!(FeatureAckOptSpan, FeatureAckOptSpanIter);
 
 /// 2.2.6.4 Login 7
 #[derive(Debug, Clone, Default, Builder)]
@@ -397,45 +397,45 @@ pub struct VectorSupportData {
 #[cfg(feature = "tds7.4")]
 impl<'a> FeatureExtAckSpan<'a> {
     #[inline(always)]
-    pub fn new(bytes: &'a [u8]) -> Option<Self> {
-        Some(Self { bytes })
+    pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
+        if bytes.len() < 6 { return Err(DecodeError::InvalidData("".to_string())) }
+        Ok(Self { bytes })
     }
     pub fn token_type(&self) -> u8 {
-        todo!()
+        self.bytes[0]
     }
-    pub fn feature_ack_opt(&self) -> FeatureAckOptSpan<'a> {
-        todo!()
+    pub fn feature_ack_opt(&self) -> FeatureAckOptSpanIter<'a> {
+        FeatureAckOptSpanIter { bytes: &self.bytes[1..] }
+    }
+}
+
+impl<'a> Iterator for FeatureAckOptSpanIter<'a> {
+    type Item = FeatureAckOptSpan<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if *self.bytes.first()? == 0xff { return None }
+        let length = u32::from_le_bytes(self.bytes.get(1..5)?.try_into().ok()?) as usize;
+        let opt = FeatureAckOptSpan { bytes: self.bytes.get(..5 + length)? };
+        self.bytes = &self.bytes[5 + length..];
+        Some(opt)
     }
 }
 
 #[cfg(feature = "tds7.4")]
 impl<'a> FeatureAckOptSpan<'a> {
-    #[inline(always)]
-    pub fn new(bytes: &'a [u8]) -> Option<Self> {
-        Some(Self { bytes })
+    pub fn ty(&self) -> Option<FeatureExtType> {
+        FeatureExtType::from_u8(self.feature_id())
     }
     pub fn feature_id(&self) -> u8 {
-        todo!()
+        self.bytes[0]
     }
-    pub fn feature_ack_data_len(&self) -> u16 {
-        todo!()
+    pub fn feature_ack_data_len(&self) -> u32 {
+        (self.bytes.len() - 5) as u32
     }
-    // pub fn feature_ack_data(&self) -> { todo!() }
+    pub fn feature_ack_data(&self) -> &'a [u8] { 
+        &self.bytes[5..]
+    }
 }
-
-// #[repr(C)]
-// pub enum FeatureExtensionAck {
-//     SessionRecovery = 0x00,
-//     FeaderatedAuthentication = 0x01,
-//     ColumnEncryption = 0x04,
-//     GlobalTransactions = 0x05,
-//     AzureSQLSupport = 0x06,
-//     DataClassification = 0x09,
-//     Utf8Support = 0x0a,
-//     AzureSQLDNSCaching = 0x0b,
-//     JsonSupport = 0x0d,
-// }
-
 
 #[cfg(test)]
 mod tests {
