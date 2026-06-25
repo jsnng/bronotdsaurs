@@ -211,19 +211,20 @@ impl<'a> TokenDecoder<'a, NoContext> {
                     if buf.len() < 5 { return None; }
                     let cursor = 5 + r_u32_le(buf, 1) as usize;
                     if cursor > buf.len() { return None; }
-                    return Some(NoContextStep::SessionState(
-                        SessionStatusSpan { bytes: &buf[..cursor] },
-                        TokenDecoder {
-                            buf: &buf[cursor..],
-                            state: NoContext,
-                        },
-                    ));
+                    return match SessionStatusSpan::new(&buf[..cursor]) {
+                        Ok(span) => Some(NoContextStep::SessionState(
+                            span,
+                            TokenDecoder {
+                                buf: &buf[cursor..],
+                                state: NoContext,
+                            },
+                        )),
+                        Err(e) => Some(NoContextStep::Error(e)),
+                    };
                 }
                 _ => {
                     // All remaining NoContext tokens are VariableLength (u16 prefix)
-                    if buf.len() < 3 { return None; }
-                    let cursor = 3 + r_u16_le(buf, 1) as usize;
-                    if cursor > buf.len() { return None; }
+                    let cursor = var_len_token_size(buf)?;
                     let span = &buf[..cursor];
                     let next_buf = &buf[cursor..];
                     let next = TokenDecoder {
@@ -231,17 +232,18 @@ impl<'a> TokenDecoder<'a, NoContext> {
                         state: NoContext,
                     };
                     match ty {
-                        DataTokenType::ENV_CHANGE => return Some(NoContextStep::EnvChange(
-                            EnvChangeSpan { bytes: span },
-                            next,
-                        )),
+                        DataTokenType::ENV_CHANGE => return match EnvChangeSpan::new(span) {
+                            Ok(s) => Some(NoContextStep::EnvChange(s, next)),
+                            Err(e) => Some(NoContextStep::Error(e)),
+                        },
                         DataTokenType::INFO => return match ErrorInfoSpan::new(span) {
                             Ok(s) => Some(NoContextStep::Info(s, next)),
                             Err(e) => Some(NoContextStep::Error(e)),
                         },
-                        DataTokenType::LOGIN_ACK => {
-                            return Some(NoContextStep::LoginAck(LoginAckSpan { bytes: span }, next));
-                        }
+                        DataTokenType::LOGIN_ACK => return match LoginAckSpan::new(span) {
+                            Ok(s) => Some(NoContextStep::LoginAck(s, next)),
+                            Err(e) => Some(NoContextStep::Error(e)),
+                        },
                         DataTokenType::ERROR => return match ErrorInfoSpan::new(span) {
                             Ok(s) => Some(NoContextStep::ServerError(s, next)),
                             Err(e) => Some(NoContextStep::Error(e)),
@@ -256,15 +258,18 @@ impl<'a> TokenDecoder<'a, NoContext> {
                                 idx += 5 + r_u32_le(buf, idx + 1) as usize
                             }
                             if idx > buf.len() { return None; }
-                            return Some(NoContextStep::FeatureExtAck(
-                                FeatureExtAckSpan { bytes: &buf[..idx]},
-                                TokenDecoder { buf: &buf[idx..], state: NoContext }
-                            ));
+                            return match FeatureExtAckSpan::new(&buf[..idx]) {
+                                Ok(s) => Some(NoContextStep::FeatureExtAck(
+                                    s,
+                                    TokenDecoder { buf: &buf[idx..], state: NoContext },
+                                )),
+                                Err(e) => Some(NoContextStep::Error(e)),
+                            };
                         },
-                        DataTokenType::SSPI => return Some(NoContextStep::Sspi(
-                            SspiSpan { bytes: span },
-                            next,
-                        )),
+                        DataTokenType::SSPI => return match SspiSpan::new(span) {
+                            Ok(s) => Some(NoContextStep::Sspi(s, next)),
+                            Err(e) => Some(NoContextStep::Error(e)),
+                        },
                         _ => {
                             // Skip unhandled variable-length tokens (TabName, ColInfo, Order, etc.)
                             buf = next_buf;
@@ -412,19 +417,25 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
                 }
                 _ => {
                     // Skip variable-length tokens with u16 length prefix (Order, TabName, ColInfo, etc.)
-                    if buf.len() < 3 {
-                        return None;
-                    }
-                    let skip = 3 + r_u16_le(buf, 1) as usize;
-                    if skip > buf.len() {
-                        return None;
-                    }
+                    let skip = var_len_token_size(buf)?;
                     buf = &buf[skip..];
                 }
 
             }
         }
     }
+}
+
+#[inline]
+fn var_len_token_size(buf: &[u8]) -> Option<usize> {
+    if buf.len() < 3 {
+        return None;
+    }
+    let size = 3 + r_u16_le(buf, 1) as usize;
+    if size > buf.len() {
+        return None;
+    }
+    Some(size)
 }
 
 #[cfg(test)]

@@ -22,51 +22,7 @@ impl<S: PreLoginPhase, T: AsyncTransport, O: Observer<Event>> AsyncReceiver<T> f
         =  PreLoginSpan<'a> where Self: 'a;
 
     async fn receive(&mut self) -> Result<(), Self::Error> {
-        self.buffer.reset();
-
-        // read the TDS header
-        let mut head = 0;
-        while head < PreLoginHeader::LENGTH {
-            let n = self
-                .stream
-                .read(&mut self.buffer.writeable()[..PreLoginHeader::LENGTH])
-                .await
-                .map_err(|_| SessionError::transport_read_error())?;
-            if n == 0 {
-                return Err(SessionError::ServerClosedTransportConnection);
-            }
-            head += n;
-        }
-        // advance tail past the header
-        self.buffer.tail(PreLoginHeader::LENGTH)?;
-
-        let span = PreLoginSpan::new(self.buffer.readable())?;
-        let length = span.header().length() as usize;
-
-        if length < PreLoginHeader::LENGTH {
-            return Err(DecodeError::InvalidLength(format!("PreLogin response: packet length {} less than header length {}", length, PreLoginHeader::LENGTH)).into());
-        }
-
-        let payload_length = length - PreLoginHeader::LENGTH;
-        let mut reading = 0;
-        while reading < payload_length {
-            let n = self
-                .stream
-                .read(&mut self.buffer.writeable()[reading..payload_length])
-                .await
-                .map_err(|_| SessionError::transport_read_error())?;
-            if n == 0 {
-                return Err(SessionError::ServerClosedTransportConnection);
-            }
-            reading += n;
-        }
-        self.buffer.tail(payload_length)?;
-
-        self.notify(Event::BytesReceived {
-            heading: "PreLogin",
-            len: self.buffer.readable().len(),
-        });
-        Ok(())
+        self.read("PreLogin").await
     }
     fn output(&self) -> Result<Self::Output<'_>, Self::Error> {
         PreLoginSpan::new(self.buffer.readable()).map_err(SessionError::from)

@@ -7,10 +7,16 @@ pub use crate::tds::session::{
     Session,
     SessionBuffer,
 };
-pub use crate::tds::session::sql_batch::{
-    LoggedInStateTransition,
+pub use crate::tds::session::decode::{
     QueryResult,
+    QueryResults,
 };
+pub use crate::tds::session::request::ClientRequestExecutionTransition;
+pub use crate::tds::session::attention::SentAttentionTransition;
+#[cfg(feature = "sspi")]
+pub use crate::tds::session::sspi::SspiProvider;
+#[cfg(feature = "fedauth")]
+pub use crate::tds::session::sspi::FedAuthProvider;
 pub use crate::tds::session::state::*;
 
 // Internal transport

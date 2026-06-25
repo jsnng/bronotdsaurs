@@ -1,9 +1,13 @@
+pub mod attention;
+pub mod decode;
 pub mod error;
 pub mod login;
 pub mod observer;
 pub mod prelogin;
 pub mod prelude;
-pub mod sql_batch;
+pub mod request;
+pub mod routing;
+pub mod sspi;
 pub mod state;
 pub mod timer;
 pub mod traits;
@@ -175,9 +179,71 @@ impl<S: Default, T, O> Session<S, T, O> {
     }
 }
 
+impl<S, T, O> Session<S, T, O> {
+    #[inline]
+    pub(in crate::tds::session) fn with_state<S2>(self, state: S2) -> Session<S2, T, O> {
+        Session {
+            stream: self.stream,
+            observer: self.observer,
+            timers: self.timers,
+            buffer: self.buffer,
+            state,
+        }
+    }
+}
+
 impl<S, T, O: Observer<Event>> Session<S, T, O> {
     pub fn notify(&mut self, event: Event) {
         self.observer.on(&event);
+    }
+}
+
+impl<S, T: AsyncTransport, O: Observer<Event>> Session<S, T, O> {
+    pub(in crate::tds::session) async fn read(
+        &mut self,
+        heading: &'static str,
+    ) -> Result<(), SessionError> {
+        self.buffer.reset();
+
+        let mut head = 0;
+        while head < Login7Header::LENGTH {
+            let n = self
+                .stream
+                .read(&mut self.buffer.writeable()[head..Login7Header::LENGTH])
+                .await
+                .map_err(|_| SessionError::transport_read_error())?;
+            if n == 0 {
+                return Err(SessionError::ServerClosedTransportConnection);
+            }
+            head += n;
+        }
+        self.buffer.tail(Login7Header::LENGTH)?;
+
+        let length = r_u16_be(self.buffer.readable(), 2) as usize;
+        if length < Login7Header::LENGTH {
+            return Err(SessionError::InvalidPacketLength { got: length, expected: Login7Header::LENGTH });
+        }
+
+        let payload_length = length - Login7Header::LENGTH;
+        let mut reading = 0;
+        while reading < payload_length {
+            let n = self
+                .stream
+                .read(&mut self.buffer.writeable()[reading..payload_length])
+                .await
+                .map_err(|_| SessionError::transport_read_error())?;
+            if n == 0 {
+                return Err(SessionError::ServerClosedTransportConnection);
+            }
+            reading += n;
+        }
+        self.buffer.tail(payload_length)?;
+
+        self.notify(Event::BytesReceived {
+            heading,
+            len: self.buffer.readable().len(),
+        });
+        Ok(())
     }
 }
 

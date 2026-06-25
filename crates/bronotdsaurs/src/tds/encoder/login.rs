@@ -365,17 +365,6 @@ impl Encoder for VectorSupportData {
 #[cfg(all(feature = "tds7.4", not(feature = "tds8.0")))]
 #[cfg(test)]
 mod tests {
-    // use crate::tds::TypeFlag;
-    // use crate::tds::encoder::traits::MessageEncoder;
-    // use crate::tds::session::prelude::SessionBuffer;
-    // use crate::tds::types::login::Login7PacketBuilder;
-    // use crate::tds::types::login::OptionFlag1;
-    // use crate::tds::types::login::OptionFlag2;
-
-    // use crate::tds::types::login::OptionFlag3;
-    // use crate::tds::types::prelude::ClientMessageType;
-    // use crate::tds::types::prelude::Login7Header;
-    // use crate::tds::types::traits::TDSPacketHeader;
 
     use super::*;
     #[test]

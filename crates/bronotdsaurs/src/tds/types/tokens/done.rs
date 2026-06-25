@@ -67,6 +67,8 @@ pub enum DoneStatus {
 impl<'a> DoneSpan<'a> {
     #[inline(always)]
     pub fn is_final(&self) -> bool { self.status() & DoneStatus::More as u16 == 0 }
+    #[inline(always)]
+    pub fn is_attention(&self) -> bool { self.status() & DoneStatus::Attention as u16 != 0 }
     #[cfg(not(feature = "tds7.2"))]
     pub const FIXED_SPAN_SIZE: usize = 9;
 
@@ -115,6 +117,25 @@ impl<'a> DoneSpan<'a> {
     #[inline(always)]
     pub fn done_row_count(&self) -> u64 {
         u64::from_le_bytes(self.bytes[5..13].try_into().unwrap())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn done_span_is_attention() {
+        let mut bytes = [0u8; DoneSpan::FIXED_SPAN_SIZE];
+        bytes[0] = 0xfd;
+        bytes[1] = DoneStatus::Attention as u16 as u8;
+        bytes[2] = 0x00;
+        let span = DoneSpan::new(&bytes).unwrap();
+        assert!(span.is_attention());
+
+        bytes[1] = 0x00;
+        let span = DoneSpan::new(&bytes).unwrap();
+        assert!(!span.is_attention());
     }
 }
 

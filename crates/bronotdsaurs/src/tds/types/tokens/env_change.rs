@@ -47,7 +47,7 @@ pub enum EnvChangeType {
 pub enum EnvValueData {
     BVarChar { new: String, old: String },
     BVarBytes { new: Vec<u8>, old: Vec<u8> },
-    Routing {},
+    Routing { protocol: u8, host: String, port: u16 },
     EnhancedRouting {},
 }
 
@@ -210,5 +210,22 @@ impl<'a> EnvChangeSpan<'a> {
     #[cfg_attr(kani, kani::ensures(|_| true))]
     pub fn cch_old_value(&self) -> Result<usize, DecodeError> {
         self.cch_at(self.ib_old_value()? - 1)
+    }
+}
+
+#[cfg(all(test, feature = "tds7.2"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn begin_transaction_descriptor_capture() {
+        let token: [u8; 14] = [
+            0xe3, 0x0b, 0x00, 0x08, 0x08, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00,
+        ];
+        let span = EnvChangeSpan { bytes: &token };
+        assert_eq!(span.ty(), Some(EnvChangeType::BeginTransaction));
+        assert!(span.bytes.len() >= 13);
+        let td = u64::from_le_bytes(span.bytes[5..13].try_into().unwrap());
+        assert_eq!(td, 0x0102_0304_0506_0708);
     }
 }

@@ -24,9 +24,19 @@ pub struct FederatedAuthenticationReadyState;
 pub struct LoggedInState {
     pub transaction_descriptor: u64,
 }
+#[derive(Debug)]
+pub struct ClientRequestExecutionState {
+    pub transaction_descriptor: u64,
+}
 #[derive(Debug, Default)]
-pub struct ClientRequestExecutionState;
+pub struct SentAttentionState {
+    pub transaction_descriptor: u64,
+}
 #[derive(Debug, Default)]
-pub struct RoutingCompletedState;
+pub struct RoutingCompletedState {
+    pub protocol: u8,
+    pub host: alloc::string::String,
+    pub port: u16,
+}
 #[derive(Debug, Default)]
 pub struct FinalState;

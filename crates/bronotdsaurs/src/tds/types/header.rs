@@ -81,6 +81,12 @@ impl AllHeaders {
         Self(headers)
     }
 
+    pub fn with_transaction(td: u64) -> Self {
+        Self(alloc::vec![DataStreamHeaderType::TransactionDescriptor(
+            TransactionDescriptorHeader::with_transaction_descriptor(td, 1),
+        )])
+    }
+
     pub fn has_transaction_descriptor(&self) -> bool {
         self.0.iter().any(|x| matches!(x, DataStreamHeaderType::TransactionDescriptor(_)))
     }
@@ -135,6 +141,13 @@ impl TransactionDescriptorHeader {
         Self {
             outstanding_request_count: 1,
             transaction_descriptor: 0,
+        }
+    }
+
+    pub fn with_transaction_descriptor(td: u64, outstanding: u32) -> Self {
+        Self {
+            outstanding_request_count: outstanding,
+            transaction_descriptor: td,
         }
     }
 }
