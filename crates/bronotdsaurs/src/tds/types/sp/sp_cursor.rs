@@ -60,3 +60,31 @@ impl SpCursor {
         .unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn op_type_bitor() {
+        let op = OpType::UPDATE | OpType::DELETE;
+        assert_eq!(op.0, 0x03)
+    }
+
+    #[test]
+    fn sp_cursor_into_rpc_batch() {
+        let batch = SpCursor {
+            cursor: 1, 
+            op_type: OpType::UPDATE | OpType::DELETE,
+            row_num: 0,
+            table: None,
+            values: vec![],
+        }.into_rpc_batch(AllHeaders::new(vec![]));
+
+        assert!(matches!(
+            batch.name_len_proc_id,
+            NameLenProcId::ProcID(ProcId::SpCursor)
+        ))
+
+    }
+}
