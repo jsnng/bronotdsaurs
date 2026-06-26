@@ -13,24 +13,24 @@ pub use crate::tds::fmt::prelude::*;
 
 #[cfg(feature = "tds8.0")]
 // TDS Version 8.0 LE
-pub const TDS_80: u32 = u32::from_le_bytes([0x80, 0x00, 0x00, 0x01]);
+pub const TDS_80: u32 = 0x80000001;
 
 #[cfg(feature = "tds7.4")]
 // TDS Version 7.4 LE
-pub const TDS_74: u32 = u32::from_le_bytes([0x74, 0x00, 0x00, 0x04]);
+pub const TDS_74: u32 = 0x74000004;
 
 #[cfg(feature = "tds7.3")]
 // TDS Version 7.3 LE
-pub const TDS_73: u32 = u32::from_le_bytes([0x73, 0x0B, 0x00, 0x03]);
+pub const TDS_73: u32 = 0x730B0003;
 
 #[cfg(feature = "tds7.2")]
 // TDS Version 7.2 LE
-pub const TDS_72: u32 = u32::from_le_bytes([0x72, 0x09, 0x00, 0x02]);
+pub const TDS_72: u32 = 0x72090002;
 
 #[cfg(feature = "tds7.1")]
 // TDS Version 7.1 LE
-pub const TDS_71: u32 = u32::from_le_bytes([0x71, 0x00, 0x00, 0x01]);
+pub const TDS_71: u32 = 0x71000001;
 
 #[cfg(feature = "tds7.0")]
 // TDS Version 7.0 LE
-pub const TDS_70: u32 = u32::from_le_bytes([0x70, 0x00, 0x00, 0x00]);
+pub const TDS_70: u32 = 0x70000000;

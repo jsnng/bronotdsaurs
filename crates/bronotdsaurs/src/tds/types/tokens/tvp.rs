@@ -225,6 +225,25 @@ impl<'a> TVPOrderingUniqueItemSpan<'a> {
     pub fn f_unique(&self) -> bool {
         (self.bytes[2] >> 3) & 0x1 == 1
     }
+    pub fn is_invalid(&self) -> bool {
+        (self.f_order_asc() && self.f_order_desc())
+            || (!self.f_order_asc() && !self.f_order_desc() && !self.f_unique())
+    }
+    pub fn is_unique(&self) ->  bool {
+        !self.f_order_asc() && !self.f_order_desc() && self.f_unique()
+    }
+    pub fn is_order_descending(&self) -> bool {
+        !self.f_order_asc() && self.f_order_desc() && !self.f_unique()
+    }
+    pub fn is_order_descending_unique(&self) ->  bool {
+        !self.f_order_asc() && self.f_order_desc() && self.f_unique()
+    }
+    pub fn is_order_ascending(&self) ->  bool {
+        self.f_order_asc() && !self.f_order_desc() && !self.f_unique()
+    }
+    pub fn is_order_ascending_unique(&self) ->  bool {
+        self.f_order_asc() && !self.f_order_desc() && self.f_unique()
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -325,5 +344,63 @@ impl<'a> Iterator for TVPColumnOrderingSpanIter<'a> {
         self.bytes = &self.bytes[TVPColumnOrderingItemSpan::LENGTH..];
         self.remaining -= 1;
         item
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tvp_ordering_unique_item_span_is_invalid() {
+        let f_order_asc = 1 << 1;
+        let f_order_desc = 1 << 2;
+        let f_unique = 1 << 3;
+        let bytes = [0x00, 0x00, f_order_asc | f_order_desc];
+        assert_eq!(bytes, [0x00, 0x00, 0b00000110]);
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_invalid());
+        let bytes = [0x00, 0x00, f_order_asc | f_order_desc | f_unique];
+        assert_eq!(bytes, [0x00, 0x00, 0b00001110]);
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_invalid());
+        let bytes = [0x00, 0x00, 0x00];
+        assert_eq!(bytes, [0x00, 0x00, 0b00000000]);
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_invalid());
+    }
+
+    #[test]
+    fn tvp_ordering_unique_item_span_is_unique() {
+        let f_unique = 1 << 3;
+        let bytes = [0x00, 0x00, f_unique];
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_unique());
+    }
+
+    #[test]
+    fn tvp_ordering_unique_item_span_is_order_descending() {
+        let f_order_desc = 1 << 2;
+        let bytes = [0x00, 0x00, f_order_desc];
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_descending());
+    }
+
+    #[test]
+    fn tvp_ordering_unique_item_span_is_order_descending_unique() {
+        let f_order_desc = 1 << 2;
+        let f_unique = 1 << 3;
+        let bytes = [0x00, 0x00, f_order_desc | f_unique];
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_descending_unique());
+    }
+
+    #[test]
+    fn tvp_ordering_unique_item_span_is_order_ascending() {
+        let f_order_asc = 1 << 1;
+        let bytes = [0x00, 0x00, f_order_asc];
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_ascending());
+    }
+
+    #[test]
+    fn tvp_ordering_unique_item_span_is_order_ascending_unique() {
+        let f_order_asc = 1 << 1;
+        let f_unique = 1 << 3;
+        let bytes = [0x00, 0x00, f_order_asc | f_unique];
+        assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_ascending_unique());
     }
 }

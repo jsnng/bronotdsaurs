@@ -346,6 +346,8 @@ impl<S, T: AsyncTransport, O: Observer<Event>> Session<S, T, O> {
                     decoder = next;
                 }
                 Some(NoContextStep::Done(span, _)) => {
+                    head += span.bytes.len();
+                    buf.head = head;
                     let is_final = span.is_final();
                     if is_final {
                         done_token = Some(span.own());
