@@ -16,6 +16,12 @@ pub struct ErrorInfoToken {
     pub(crate) line_number: u32, // long
 }
 
+impl core::fmt::Display for ErrorInfoToken {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "[{}:{}] {}", self.number(), self.line_number(), self.msg_text())
+    }
+}
+
 #[derive(Debug, Clone, Copy, DefaultDisplayFormat)]
 pub enum ErrorClass {
     Informational,

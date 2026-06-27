@@ -197,3 +197,32 @@ pub enum ValueRef<'a> {
     Decimal(&'a [u8]),
     Vector(vector::VectorSpan<'a>),
 }
+
+impl core::fmt::Display for ValueRef<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match *self {
+            ValueRef::Null => f.write_str("NULL"),
+            ValueRef::Int1(x) => write!(f, "{x}"),
+            ValueRef::Int2(x) => write!(f, "{x}"),
+            ValueRef::Int4(x) => write!(f, "{x}"),
+            ValueRef::Int8(x) => write!(f, "{x}"),
+            ValueRef::Bit(x) => write!(f, "{x}"),
+            ValueRef::Float4(x) => write!(f, "{x}"),
+            ValueRef::Float8(x) => write!(f, "{x}"),
+            ValueRef::Money4(b) => write!(f, "{}", money::SmallMoney::new(b)),
+            ValueRef::Money(b) => write!(f, "{}", money::Money::new(b)),
+            ValueRef::DateTime4(b) => write!(f, "{}", datetime::SmallDateTime::new(b)),
+            ValueRef::DateTime(b) => write!(f, "{}", datetime::DateTime::new(b)),
+            ValueRef::NVarChar(b) => write!(f, "{}", NVarCharSpan::new(b)),
+            ValueRef::VarChar(b) => write!(f, "{}", String::from_utf8_lossy(b)),
+            ValueRef::Guid(b) => write!(f, "{}", guid::Guid::new(b)),
+            ValueRef::Vector(v) => write!(f, "{v}"),
+            ValueRef::VarBinary(b) | ValueRef::Decimal(b) => {
+                for byte in b {
+                    write!(f, "{byte:02x}")?;
+                }
+                Ok(())
+            }
+        }
+    }
+}

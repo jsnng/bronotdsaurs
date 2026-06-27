@@ -225,22 +225,28 @@ impl<'a> TVPOrderingUniqueItemSpan<'a> {
     pub fn f_unique(&self) -> bool {
         (self.bytes[2] >> 3) & 0x1 == 1
     }
+
     pub fn is_invalid(&self) -> bool {
         (self.f_order_asc() && self.f_order_desc())
             || (!self.f_order_asc() && !self.f_order_desc() && !self.f_unique())
     }
+
     pub fn is_unique(&self) ->  bool {
         !self.f_order_asc() && !self.f_order_desc() && self.f_unique()
     }
+
     pub fn is_order_descending(&self) -> bool {
         !self.f_order_asc() && self.f_order_desc() && !self.f_unique()
     }
+
     pub fn is_order_descending_unique(&self) ->  bool {
         !self.f_order_asc() && self.f_order_desc() && self.f_unique()
     }
+
     pub fn is_order_ascending(&self) ->  bool {
         self.f_order_asc() && !self.f_order_desc() && !self.f_unique()
     }
+    
     pub fn is_order_ascending_unique(&self) ->  bool {
         self.f_order_asc() && !self.f_order_desc() && self.f_unique()
     }
