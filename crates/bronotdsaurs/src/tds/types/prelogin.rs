@@ -328,6 +328,7 @@ pub enum PreLoginEncryptionOptions {
     Ext = 0x20,
     CertificateOff = 0x80,
     CertificateOn = 0x81,
+    CertificateRequired = 0x83,
 }
 
 #[cfg(kani)]

@@ -48,27 +48,44 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<InitialState, T, O> {
             .map_err(|_| SessionError::transport_read_error())?;
         AsyncTransport::set_write_timeout(&mut self.stream, self.timers.connection)
             .map_err(|_| SessionError::transport_write_error())?;
+
+        let req_encryption_opts = prelogin
+            .encryption()
+            .and_then(|b| PreLoginEncryptionOptions::try_from(b).ok())
+            .unwrap_or(PreLoginEncryptionOptions::Off);
+
         self.send(prelogin).await?;
         self.notify(Event::PreLoginSent);
 
         self.receive().await?;
 
-        let bytes = PreLoginSpan::populate(self.buffer.readable())?
+        let span = PreLoginSpan::populate(self.buffer.readable())?;
+
+        let bytes = span
             .encryption()
             .unwrap_or(PreLoginEncryptionOptions::NotSupported as u8);
-        self.notify(Event::PreLoginReceived);
 
         #[cfg(feature = "std")]
         debug!("Server encryption byte = 0x{:02x}", bytes);
 
-        let encryption: PreLoginEncryptionOptions = bytes
+        if matches!(span.inst_opt(), Some([1, ..])) {
+            return Err(DecodeError::InvalidField(
+                "PreLogin: INSTOP mismatch".into()
+            ).into())
+        }
+
+        self.notify(Event::PreLoginReceived);
+
+        let res_encryption_opts: PreLoginEncryptionOptions = bytes
             .try_into()?;
 
         #[cfg(feature = "std")]
-        debug!("Parsed as {:?}", encryption);
+        debug!("Parsed as {:?}", res_encryption_opts);
 
-        match encryption {
-            PreLoginEncryptionOptions::Off | PreLoginEncryptionOptions::NotSupported => {
+        use PreLoginEncryptionOptions::{NotSupported, Off, On, Required};
+
+        match (res_encryption_opts, req_encryption_opts) {
+            (NotSupported, Off) => {
                 self.notify(Event::StateTransition {
                     from: "Initial",
                     to: "LoginReady",
@@ -81,7 +98,7 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<InitialState, T, O> {
                     state: LoginReadyState,
                 }))
             }
-            PreLoginEncryptionOptions::On | PreLoginEncryptionOptions::Required => {
+            (Off | On | Required, Off) | (On | Required, On) => {
                 #[cfg(feature = "tls")]
                 {
                     self.notify(Event::StateTransition {
@@ -99,7 +116,15 @@ impl<T: AsyncTransport, O: Observer<Event>> Session<InitialState, T, O> {
                 #[cfg(not(feature = "tls"))]
                 Err(SessionError::Unimplemented)
             }
-            _ => Err(DecodeError::InvalidField(format!("PreLogin response: unsupported encryption option: {:?}", encryption)).into()),
+            (Off | NotSupported, On) => Err(DecodeError::InvalidField (
+                "PreLogin: client requires encryption, server does not support it".into(),
+            )
+            .into()),
+            _ => Err(DecodeError::InvalidField(format!(
+                "PreLogin: unsupported encryption negotiation res={:?} req={:?}",
+                res_encryption_opts, req_encryption_opts
+            ))
+            .into()),
         }
     }
 }
