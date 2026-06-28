@@ -377,6 +377,7 @@ mod tests {
     fn tvp_ordering_unique_item_span_is_unique() {
         let f_unique = 1 << 3;
         let bytes = [0x00, 0x00, f_unique];
+        assert_eq!(bytes, [0x00, 0x00, 0b00001000]);
         assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_unique());
     }
 
@@ -384,6 +385,7 @@ mod tests {
     fn tvp_ordering_unique_item_span_is_order_descending() {
         let f_order_desc = 1 << 2;
         let bytes = [0x00, 0x00, f_order_desc];
+        assert_eq!(bytes, [0x00, 0x00, 0b00000100]);
         assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_descending());
     }
 
@@ -392,6 +394,7 @@ mod tests {
         let f_order_desc = 1 << 2;
         let f_unique = 1 << 3;
         let bytes = [0x00, 0x00, f_order_desc | f_unique];
+         assert_eq!(bytes, [0x00, 0x00, 0b00001100]);
         assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_descending_unique());
     }
 
@@ -399,6 +402,7 @@ mod tests {
     fn tvp_ordering_unique_item_span_is_order_ascending() {
         let f_order_asc = 1 << 1;
         let bytes = [0x00, 0x00, f_order_asc];
+         assert_eq!(bytes, [0x00, 0x00, 0b00000010]);
         assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_ascending());
     }
 
@@ -407,6 +411,7 @@ mod tests {
         let f_order_asc = 1 << 1;
         let f_unique = 1 << 3;
         let bytes = [0x00, 0x00, f_order_asc | f_unique];
+        assert_eq!(bytes, [0x00, 0x00, 0b00001010]);
         assert!(TVPOrderingUniqueItemSpan { bytes: &bytes }.is_order_ascending_unique());
     }
 }

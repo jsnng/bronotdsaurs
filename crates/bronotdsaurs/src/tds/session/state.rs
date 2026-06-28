@@ -34,6 +34,10 @@ pub struct ClientRequestExecutionState {
 pub struct SentAttentionState {
     pub transaction_descriptor: u64,
 }
+pub struct BulkLoadState {
+    pub transaction_descriptor: u64,
+    pub bulk: crate::tds::encoder::bulk_load::BulkLoad,
+}
 #[derive(Debug, Default)]
 pub struct RoutingCompletedState {
     pub route: Routing,

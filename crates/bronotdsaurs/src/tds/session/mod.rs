@@ -1,4 +1,5 @@
 pub mod attention;
+pub mod bulk_load;
 pub mod decode;
 pub mod error;
 pub mod login;
