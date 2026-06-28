@@ -1,14 +1,23 @@
 # bronotdsaurs
 
-- It is currently scoped for multi-protocol support.
+## Design
+
+This is a database driver workspace. Today it is MS-TDS only. However, abstractions are defined for multi-protocol support - possibly Postgres next.
+
+It has minimal dependencies and is pure-rust:
+
+- Protocol-agnostic via `interface::Connection`.
+- Transport-agnostic via `AsyncTransport`.
+- TLS-agnostic - optional `rustls`. Swappable.
+- Runtime-agnostic - `tokio` is dev-dependency only for testing.
 
 > [!WARNING]
 > The public API is unstable and will change frequently. Expect breaking changes between any two commits until v1.0.0. Pin to a specific git revision if you wish to depend on it.
 
 > [!NOTE]
-> This project is functional in that the core TDS flows are implemented but it should be considered "early development".
+> This project is functional in that the core TDS flows are implemented but isn't fully specification-compliant yet. It should be considered "early development". Using this in production would make you a certified lunatic, as there is minimal specification enforcement which can result in credentials being exposed.
 
-# Layout
+## Layout
 
 ```
  bronotdsaurs/
