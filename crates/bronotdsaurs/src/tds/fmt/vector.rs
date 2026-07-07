@@ -67,6 +67,73 @@ impl<'a> VectorSpan<'a> {
     }
 }
 
+impl<'a> core::fmt::Display for VectorSpan<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let sizeof = if self.ty == Self::FULL_PRECISION_FLOAT { 4 } else { 2 };
+        f.write_str("[")?;
+        for (i, c) in self.bytes.chunks_exact(sizeof).enumerate() {
+            if i != 0 {
+                f.write_str(", ")?;
+            }
+            let v = if self.ty == Self::FULL_PRECISION_FLOAT {
+                f32::from_le_bytes([c[0], c[1], c[2], c[3]])
+            } else {
+                f16_to_f32(u16::from_le_bytes([c[0], c[1]]))
+            };
+            write!(f, "{v}")?;
+        }
+        f.write_str("]")
+    }
+}
+
+fn f16_to_f32(h: u16) -> f32 {
+    let h = h as u32;
+    let sign = (h & 0x8000) << 16;
+    let exp = (h & 0x7c00) >> 10;
+    let mant = h & 0x03ff;
+    let bits = if exp == 0 {
+        if mant == 0 {
+            sign
+        } else {
+            let mut e = 0i32;
+            let mut m = mant;
+            while m & 0x0400 == 0 {
+                m <<= 1;
+                e -= 1;
+            }
+            e += 1;
+            m &= !0x0400;
+            sign | (((e + 112) as u32) << 23) | (m << 13)
+        }
+    } else if exp == 0x1f {
+        sign | 0x7f80_0000 | (mant << 13)
+    } else {
+        sign | ((exp + 112) << 23) | (mant << 13)
+    };
+    f32::from_bits(bits)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn f16() {
+        assert_eq!(f16_to_f32(0x3c00), 1.0);
+        assert_eq!(f16_to_f32(0xc000), -2.0);
+        assert_eq!(f16_to_f32(0x0000), 0.0);
+    }
+
+    #[test]
+    fn display_full_precision() {
+        let mut bytes = vec![0xa9, 0x01, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00];
+        bytes.extend_from_slice(&1.5f32.to_le_bytes());
+        bytes.extend_from_slice(&(-2.0f32).to_le_bytes());
+        let v = VectorSpan::new(&bytes).unwrap();
+        assert_eq!(v.to_string(), "[1.5, -2]");
+    }
+}
+
 #[cfg(kani)]
 #[kani::proof_for_contract(VectorSpan::new)]
 fn verify_vector_span_new() {

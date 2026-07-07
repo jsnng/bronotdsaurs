@@ -1,5 +1,6 @@
 use crate::tds::prelude::*;
 
+// TODO: IS STUB
 #[derive(Debug, Clone)]
 pub struct DataClassificationToken {
     pub(crate) sensitivity_labels: Vec<SensitivityLabel>,

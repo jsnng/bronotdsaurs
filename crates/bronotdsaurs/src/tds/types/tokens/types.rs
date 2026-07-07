@@ -91,6 +91,7 @@ impl DataTokenType {
             x[DataTokenType::SessionState as usize] = DataTokenType::SESSION_STATE;
         }
         x[DataTokenType::Sspi as usize] = DataTokenType::SSPI;
+        x[DataTokenType::Order as usize] = DataTokenType::ORDER;
         x
     };
     pub const UNKNOWN: u8 = 0;
@@ -111,6 +112,7 @@ impl DataTokenType {
     #[cfg(feature = "tds7.4")]
     pub const SESSION_STATE: u8 = 14;
     pub const SSPI: u8 = 15;
+    pub const ORDER: u8 = 16;
 }
 
 impl<'a> BVarBytesSpan<'a> {

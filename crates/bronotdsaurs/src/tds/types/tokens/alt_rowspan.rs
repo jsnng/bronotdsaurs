@@ -1,5 +1,7 @@
 use crate::tds::prelude::*;
 
+// TODO: IS STUB
+
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, TryFromIntoFormat)]
 pub enum AggregateOperator {

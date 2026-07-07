@@ -166,6 +166,9 @@ impl<'a> TokenDecoder<'a, NoContext> {
                         )));
                     }
                 }
+                // DataTokenType::ORDER => {
+
+                // },
                 DataTokenType::DONE => {
                     let cursor = DoneSpan::FIXED_SPAN_SIZE;
                     if cursor > buf.len() { return None; }

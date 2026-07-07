@@ -15,7 +15,7 @@ It has minimal dependencies and is pure-rust:
 > The public API is unstable and will change frequently. Expect breaking changes between any two commits until v1.0.0. Pin to a specific git revision if you wish to depend on it.
 
 > [!NOTE]
-> This project is functional in that the core TDS flows are implemented but isn't fully specification-compliant yet. It should be considered "early development". Using this in production would make you a certified lunatic, as there is minimal specification enforcement which can result in credentials being exposed.
+> This project is functional in that the core TDS flows are implemented but isn't fully specification-compliant yet. It should be considered "early development". Using this in production would make you a certified lunatic. In particular, there is minimal specification enforcement - e.g., PreLogin encryption isn't validated, so credentials can be exposed to a downgrade.
 
 ## Layout
 

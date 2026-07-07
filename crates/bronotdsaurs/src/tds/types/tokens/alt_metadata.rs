@@ -1,5 +1,7 @@
 use crate::tds::prelude::*;
 
+// TODO: IS STUB
+
 #[derive(Debug, Clone)]
 pub struct AltMetaDataToken {
     pub(crate) count: u16,
