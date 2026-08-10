@@ -170,7 +170,7 @@ pub const DTYPE_LUT: [DtypeLUTEntry; 256] = {
 };
 
 impl<'a> RowItemSpan<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn val_ref(&self, ty: u8) -> Option<ValueRef<'a>> {
         DTYPE_LUT[ty as usize].decoder?(self.bytes)
     }

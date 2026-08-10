@@ -46,7 +46,6 @@ pub struct NbcRow;
 
 impl Drainable for Row {
     const TOKEN: u8 = 0xd1;
-    #[inline(always)]
     fn steps(buf: &[u8], strides: &[u8]) -> Option<usize> {
         let mut cursor = 1usize;
         for &stride in strides {
@@ -62,7 +61,6 @@ impl Drainable for Row {
 
 impl Drainable for NbcRow {
     const TOKEN: u8 = 0xd2;
-    #[inline(always)]
     fn steps(buf: &[u8], strides: &[u8]) -> Option<usize> {
         let bitmap = strides.len().div_ceil(8);
         let mut cursor = 1 + bitmap;
@@ -144,7 +142,6 @@ impl<'a> TokenDecoder<'a, NoContext> {
     }
 
     /// General-purpose one-token-at-a-time stepper. "catch-all" function for stream token parsing.
-    #[inline(always)]
     pub fn advance(self) -> Option<NoContextStep<'a>> {
         let mut buf = self.buf;
         loop {
@@ -293,7 +290,7 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
     /// valid until the next buffer refill — call `.own()` on it to keep the
     /// metadata across refills, then use [`TokenDecoder::resume`] to continue
     /// row decoding with it.
-    #[inline(always)]
+    #[inline]
     pub fn into_col_metadata(self) -> ColMetaDataSpan<'a> {
         self.state.col_metadata
     }
@@ -301,7 +298,7 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
     /// Reconstructs a `ContextRequired` decoder positioned at `buf` using the given column
     /// metadata. Use this to resume row decoding after a buffer refill without re-scanning
     /// the column metadata token.
-    #[inline(always)]
+    #[inline]
     pub fn resume(buf: &'a [u8], col_metadata: ColMetaDataSpan<'a>) -> Self {
         Self {
             buf,
@@ -314,7 +311,6 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
     ///
     /// Handles both ROW (0xD1) and NBCROW (0xD2) tokens — SQL Server may freely
     /// mix them within a single result set (NBCROW for rows with many NULLs).
-    #[inline]
     pub fn drain<F: FnMut(&'a [u8])>(self, mut f: F) -> (Option<DoneSpan<'a>>, usize) {
         let original_length: usize = self.buf.len();
         let mut buf = self.buf;
@@ -348,7 +344,6 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
     }
 
     /// The ContextRequiredStep version of advance().
-    #[inline(always)]
     pub fn advance(self) -> Option<ContextRequiredStep<'a>> {
         let mut buf = self.buf;
         loop {
@@ -430,7 +425,6 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
     }
 }
 
-#[inline]
 fn var_len_token_size(buf: &[u8]) -> Option<usize> {
     if buf.len() < 3 {
         return None;

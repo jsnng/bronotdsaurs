@@ -97,7 +97,7 @@ impl OptionFlags {
     /// - f_with_recomp (bool): `RPC_SENT_WITH_RECOMP` (1)
     /// - f_no_metadata (bool): `NO_META_DATA` (1)
     /// - f_reuse_metadata (bool): `REUSE_META_DATA` (1)
-    #[inline(always)]
+    #[inline]
     pub fn new(f_with_recomp: bool, f_no_metadata: bool, f_reuse_metadata: bool) -> Self {
         let option_flags =
             (f_with_recomp as u16) | (f_no_metadata as u16) << 1 | (f_reuse_metadata as u16) << 2;
@@ -117,19 +117,19 @@ impl OptionFlags {
     pub const REUSE_META_DATA: bool = true;
 
     /// f_with_recomp option flag bit accessor
-    #[inline(always)]
+    #[inline]
     pub fn f_with_recomp(&self) -> bool {
         self.0 & 0x01 != 0
     }
 
     /// f_no_meta_data option flag bit accessor
-    #[inline(always)]
+    #[inline]
     pub fn f_no_meta_data(&self) -> bool {
         self.0 & 0x02 != 0
     }
 
     /// f_reuse_meta_data option flag bit accessor
-    #[inline(always)]
+    #[inline]
     pub fn f_reuse_meta_data(&self) -> bool {
         self.0 & 0x04 != 0
     }
@@ -237,7 +237,7 @@ impl StatusFlags {
     /// - f_by_ref_value (bool): `OUTPUT_BY_REF` (1) or `OUTPUT_BY_VAL` (0) if the parameter is send by reference or value respectively.
     /// - f_default_value (bool): `DEFAULT_PARAMETER_VALUE` (1) if the parameter is passed as default.
     /// - f_encrypted (bool): `ENCRYPTED_PARAMETER` (1) if the parameter is encrypted
-    #[inline(always)]
+    #[inline]
     pub fn new(f_by_ref_value: bool, f_default_value: bool, f_encrypted: bool) -> Self {
         let status_flags =
             (f_by_ref_value as u8) | (f_default_value as u8) << 1 | (f_encrypted as u8) << 3;
@@ -245,7 +245,7 @@ impl StatusFlags {
     }
 
     /// return StatusFlags in bytes
-    #[inline(always)]
+    #[inline]
     pub fn as_bytes(&self) -> u8 {
         self.0
     }
@@ -257,7 +257,7 @@ impl StatusFlags {
     ///
     /// - OUTPUT_BY_REF (or 1) if the parameter is send by reference
     /// - OUTPUT_BY_VAL (or 0) if the parameter is send by value
-    #[inline(always)]
+    #[inline]
     pub fn f_by_ref_value(&self) -> bool {
         self.0 & 0x01 != 0
     }
@@ -265,7 +265,7 @@ impl StatusFlags {
     pub const DEFAULT_PARAMETER_VALUE: bool = true;
 
     /// f_default_value status flag bit accessor
-    #[inline(always)]
+    #[inline]
     pub fn f_default_value(&self) -> bool {
         self.0 & 0x02 != 0
     }
@@ -273,7 +273,7 @@ impl StatusFlags {
     pub const ENCRYPTED_PARAMETER: bool = true;
 
     /// f_encrypted status flag bit accessor
-    #[inline(always)]
+    #[inline]
     pub fn f_encrypted(&self) -> bool {
         self.0 & 0x08 != 0
     }

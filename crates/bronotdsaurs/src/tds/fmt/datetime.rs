@@ -33,7 +33,6 @@ const DOY_MD: [(u8, u8); 366] = {
     dt.1 >= 1 && dt.1 <= 12 &&
     dt.2 >= 1 && dt.2 <= 31
 }))]
-#[inline(always)]
 fn civil_from_days(z: i32) -> (i32, u8, u8) {
     let mut z = z;
     z += 693901; // = 719468 (Hinnant's Unix epoch offset) − 25567 (TDS epoch offset)
@@ -60,7 +59,6 @@ pub struct SmallDateTime {
 }
 
 impl SmallDateTime {
-    #[inline(always)]
     pub fn new(bytes: [u8; 4]) -> Self {
         let days: u16 = r_u16_le(&bytes, 0);
         let mins: u16 = r_u16_le(&bytes, 2);
@@ -73,15 +71,15 @@ impl SmallDateTime {
             min: (mins % 60) as u8,
         }
     }
-    #[inline(always)]
+    #[inline]
     pub fn min(&self) -> u8 { self.min }
-    #[inline(always)]
+    #[inline]
     pub fn hour(&self) -> u8 { self.hour }
-    #[inline(always)]
+    #[inline]
     pub fn day(&self) -> u8 { self.day }
-    #[inline(always)]
+    #[inline]
     pub fn month(&self) -> u8 { self.month }
-    #[inline(always)]
+    #[inline]
     pub fn year(&self) -> i32 { self.year }
 }
 
@@ -97,7 +95,6 @@ pub struct DateTime {
 }
 
 impl DateTime {
-    #[inline(always)]
     pub fn new(bytes: [u8; 8]) -> Self {
         let days: i32 = r_i32_le(&bytes, 0);
         let ticks: u32 = r_u32_le(&bytes, 4);
@@ -115,19 +112,19 @@ impl DateTime {
             milliseconds,
         }
     }
-    #[inline(always)]
+    #[inline]
     pub fn milliseconds(&self) -> u16 { self.milliseconds }
-    #[inline(always)]
+    #[inline]
     pub fn second(&self) -> u8 { self.second }
-    #[inline(always)]
+    #[inline]
     pub fn min(&self) -> u8 { self.min }
-    #[inline(always)]
+    #[inline]
     pub fn hour(&self) -> u8 { self.hour }
-    #[inline(always)]
+    #[inline]
     pub fn day(&self) -> u8 { self.day }
-    #[inline(always)]
+    #[inline]
     pub fn month(&self) -> u8 { self.month }
-    #[inline(always)]
+    #[inline]
     pub fn year(&self) -> i32 { self.year }
 }
 

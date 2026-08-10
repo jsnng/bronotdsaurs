@@ -201,22 +201,22 @@ impl<'a> ColMetaDataSpan<'a> {
         })
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn count(&self) -> usize {
         r_u16_le(self.bytes, 0) as usize
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn stride(&self, i: usize) -> u8 {
         self.strides[i]
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn strides_as_slice(&self) -> &[u8] {
         self.strides.as_slice()
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn byte_len(&self) -> usize {
         self.bytes.len()
     }
@@ -237,17 +237,17 @@ impl<'a> ColMetaDataSpan<'a> {
 }
 
 impl ColMetaDataOwned {
-    #[inline(always)]
+    #[inline]
     pub fn count(&self) -> usize {
         r_u16_le(&self.bytes, 0) as usize
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn strides_as_slice(&self) -> &[u8] {
         self.strides.as_slice()
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn borrow(&self) -> ColMetaDataSpan<'_> {
         ColMetaDataSpan {
             bytes: &self.bytes,
@@ -284,7 +284,7 @@ pub struct ColumnMetaDataSpanIter<'a> {
 }
 
 impl<'a> ColumnMetaDataSpanIter<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn new(bytes: &'a [u8], remaining: usize) -> Self {
         Self { bytes, remaining }
     }
@@ -303,7 +303,6 @@ impl<'a> IntoIterator for ColMetaDataSpan<'a> {
 impl<'a> Iterator for ColumnMetaDataSpanIter<'a> {
     type Item = ColMetaDataItemSpan<'a>;
 
-    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.remaining == 0 {
             return None;
@@ -332,18 +331,17 @@ impl<'a> ColMetaDataItemSpan<'a> {
     pub const FIXED_DATA_OFFSET: usize = 4;
 
     #[cfg(not(feature = "tds7.2"))]
-    #[inline(always)]
+    #[inline]
     pub fn user_type(&self) -> u16 {
         r_u16_le(self.bytes, 0)
     }
 
     #[cfg(feature = "tds7.2")]
-    #[inline(always)]
+    #[inline]
     pub fn user_type(&self) -> u32 {
         r_u32_le(self.bytes, 0)
     }
 
-    #[inline(always)]
     pub fn type_info(&self) -> Option<TypeInfoSpan<'a>> {
         let dtype = DataType::try_from(self.ty()).ok()?;
         match dtype {
@@ -356,22 +354,22 @@ impl<'a> ColMetaDataItemSpan<'a> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     const fn ib_type_info(&self) -> usize {
         Self::FIXED_DATA_OFFSET + 3
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn ty(&self) -> u8 {
         self.bytes[self.ib_type_info() - 1]
     }
 
-    #[inline(always)]
+    #[inline]
     fn cch_type_info(&self) -> usize {
         DTYPE_LUT[self.ty() as usize].cch_type_info as usize
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn col_name(&self) -> NVarCharSpan<'a> {
         let ib = self.ib_col_name();
         let cch = self.bytes[ib - 1] as usize;
@@ -380,12 +378,12 @@ impl<'a> ColMetaDataItemSpan<'a> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn ib_col_name(&self) -> usize {
         self.ib_type_info() + self.cch_type_info() + 1
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn cch_col_name(&self) -> usize {
         self.bytes[self.ib_col_name() - 1] as usize
     }
@@ -393,7 +391,6 @@ impl<'a> ColMetaDataItemSpan<'a> {
 
 /// Advance cursor past the value at `buf[offset..]` for a column with the given stride.
 /// Returns `None` if `buf` does not contain enough bytes (field spans a packet boundary).
-#[inline(always)]
 pub fn walk(buf: &[u8], offset: usize, stride: u8) -> Option<usize> {
     if stride == 0 {
         Some(0)

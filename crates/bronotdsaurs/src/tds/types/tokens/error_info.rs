@@ -149,51 +149,51 @@ impl<'a> ErrorInfoSpan<'a> {
     #[cfg_attr(kani, kani::ensures(|x: &DataTokenType|
         *x == DataTokenType::Error || *x == DataTokenType::Info
     ))]
-    #[inline(always)]
+    #[inline]
     pub fn ty(&self) -> DataTokenType {
         DataTokenType::from_u8(self.bytes[0]).unwrap()
     }
 
-    #[inline(always)]
+    #[inline]
     // length gives the token body size only.
     pub fn length(&self) -> u16 {
         r_u16_le(self.bytes, 1)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn number(&self) -> u32 {
         r_u32_le(self.bytes, 3)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn state(&self) -> u8 { self.bytes[7] }
 
-    #[inline(always)]
+    #[inline]
     pub fn class(&self) -> u8 { self.bytes[8] }
 
-    #[inline(always)]
+    #[inline]
     pub fn msg_text(&self) -> NVarCharSpan<'_> {
         NVarCharSpan::new(&self.bytes[Self::VARIABLE_SPAN_SIZE..Self::VARIABLE_SPAN_SIZE + self.cch_msg_text])
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn server_name(&self) -> NVarCharSpan<'_> {
         NVarCharSpan::new(&self.bytes[self.ib_server_name..self.ib_server_name + self.cch_server_name])
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn proc_name(&self) -> NVarCharSpan<'_> {
         NVarCharSpan::new(&self.bytes[self.ib_proc_name..self.ib_proc_name + self.cch_proc_name])
     }
 
     #[cfg(not(feature = "tds7.3"))]
-    #[inline(always)]
+    #[inline]
     pub fn line_number(&self) -> u16 {
         r_u16_le(self.bytes, self.ib_line_number)
     }
 
     #[cfg(feature = "tds7.3")]
-    #[inline(always)]
+    #[inline]
     pub fn line_number(&self) -> u32 {
         r_u32_le(self.bytes, self.ib_line_number)
     }

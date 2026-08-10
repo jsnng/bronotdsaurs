@@ -35,7 +35,7 @@ impl<'a> Decode<'a> for ColInfoSpan<'a> {
     type Span = ColInfoSpan<'a>;
     type Error = DecodeError;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         ColInfoSpan::new(buf)
     }
@@ -78,7 +78,7 @@ impl<'a> Decode<'a> for DoneSpan<'a> {
     type Span = DoneSpan<'a>;
     type Error = DecodeError;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         DoneSpan::new(buf)
     }
@@ -99,7 +99,6 @@ impl<'a> Decode<'a> for EnvChangeSpan<'a> {
     type Span = EnvChangeSpan<'a>;
     type Error = DecodeError;
 
-    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         let span = EnvChangeSpan::new(buf)?;
         span.ty().unwrap();
@@ -188,12 +187,11 @@ impl<'a> Decode<'a> for ErrorInfoSpan<'a> {
     type Error = DecodeError;
     type Span = ErrorInfoSpan<'a>;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         ErrorInfoSpan::new(buf)
     }
 
-    #[inline]
     fn own(self) -> Self::Owned {
         ErrorInfoToken {
             ty: self.ty(),
@@ -215,7 +213,7 @@ impl<'a> Decode<'a> for LoginAckSpan<'a> {
     type Error = DecodeError;
     type Span = LoginAckSpan<'a>;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         LoginAckSpan::new(buf)
     }
@@ -256,7 +254,7 @@ impl<'a> Decode<'a> for OrderSpan<'a> {
     type Span = OrderSpan<'a>;
     type Error = DecodeError;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         OrderSpan::new(buf)
     }
@@ -274,7 +272,7 @@ impl<'a> Decode<'a> for ReturnStatusSpan<'a> {
     type Span = ReturnStatusSpan<'a>;
     type Error = DecodeError;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         ReturnStatusSpan::new(buf)
     }
@@ -291,7 +289,7 @@ impl<'a> Decode<'a> for ReturnValueSpan<'a> {
     type Span = ReturnValueSpan<'a>;
     type Error = DecodeError;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         ReturnValueSpan::new(buf)
     }
@@ -369,7 +367,7 @@ impl<'a> Decode<'a> for TabNameSpan<'a> {
     type Span = TabNameSpan<'a>;
     type Error = DecodeError;
 
-    #[inline(always)]
+    #[inline]
     fn populate(buf: &'a [u8]) -> Result<Self::Span, Self::Error> {
         TabNameSpan::new(buf)
     }

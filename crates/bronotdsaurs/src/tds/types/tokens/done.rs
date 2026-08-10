@@ -27,27 +27,27 @@ impl DoneToken {
 
 #[rustfmt::skip]
 impl DoneToken {
-    #[inline(always)]
+    #[inline]
     pub fn is_final(&self) -> bool { self.status & DoneStatus::More as u16 == 0 }
-    #[inline(always)]
+    #[inline]
     pub fn is_more(&self) -> bool { self.status & DoneStatus::More as u16 != 0 }
-    #[inline(always)]
+    #[inline]
     pub fn is_error(&self) -> bool { self.status & DoneStatus::Error as u16 != 0 }
-    #[inline(always)]
+    #[inline]
     pub fn is_in_transaction(&self) -> bool { self.status & DoneStatus::InTransaction as u16 != 0 }
-    #[inline(always)]
+    #[inline]
     pub fn is_count(&self) -> bool { self.status & DoneStatus::Count as u16 != 0 }
     #[cfg(not(feature = "tds7.2"))]
-    #[inline(always)]
+    #[inline]
     pub fn done_row_count(&self) -> u32 { self.done_row_count }
     #[cfg(feature = "tds7.2")]
-    #[inline(always)]
+    #[inline]
     pub fn done_row_count(&self) -> u64 { self.done_row_count }
-    #[inline(always)]
+    #[inline]
     pub fn is_attention(&self) -> bool { self.status & DoneStatus::Attention as u16 != 0 }
-    #[inline(always)]
+    #[inline]
     pub fn is_rpc_in_atch(&self) -> bool { self.status & DoneStatus::RPCInBatch as u16 != 0 }
-    #[inline(always)]
+    #[inline]
     pub fn is_server_error(&self) -> bool { self.status & DoneStatus::ServerError as u16 != 0 }
 }
 
@@ -65,9 +65,9 @@ pub enum DoneStatus {
 }
 
 impl<'a> DoneSpan<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn is_final(&self) -> bool { self.status() & DoneStatus::More as u16 == 0 }
-    #[inline(always)]
+    #[inline]
     pub fn is_attention(&self) -> bool { self.status() & DoneStatus::Attention as u16 != 0 }
     #[cfg(not(feature = "tds7.2"))]
     pub const FIXED_SPAN_SIZE: usize = 9;
@@ -94,27 +94,27 @@ impl<'a> DoneSpan<'a> {
         DataTokenType::from_u8(self.bytes[0]).unwrap_or(DataTokenType::Done)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn status(&self) -> u16 {
         let cursor: usize = 1;
         r_u16_le(self.bytes, cursor)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn current_cmd(&self) -> u16 {
         let cursor: usize = 3;
         r_u16_le(self.bytes, cursor)
     }
 
     #[cfg(not(feature = "tds7.2"))]
-    #[inline(always)]
+    #[inline]
     pub fn done_row_count(&self) -> u32 {
         let cursor: usize = 5;
         r_u32_le(self.bytes, cursor)
     }
 
     #[cfg(feature = "tds7.2")]
-    #[inline(always)]
+    #[inline]
     pub fn done_row_count(&self) -> u64 {
         u64::from_le_bytes(self.bytes[5..13].try_into().unwrap())
     }

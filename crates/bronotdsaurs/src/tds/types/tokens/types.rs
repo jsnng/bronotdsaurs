@@ -116,7 +116,7 @@ impl DataTokenType {
 }
 
 impl<'a> BVarBytesSpan<'a> {
-    #[inline(always)]
+    #[inline]
     // Post: Some(y) iff buf.len() == buf[0] + 1 AND &y.bytes == buf
     #[cfg_attr(kani, kani::ensures(|x: &Option<Self>|
         x.is_some() == (buf.len() == 1 + buf.first().copied().unwrap_or(0) as usize)
@@ -132,11 +132,11 @@ impl<'a> BVarBytesSpan<'a> {
 
         Some(Self { bytes: buf })
     }
-    #[inline(always)]
+    #[inline]
     pub fn length(&self) -> usize {
         self.bytes[0] as usize
     }
-    #[inline(always)]
+    #[inline]
     pub fn bytes(&self) -> &'a [u8] {
         &self.bytes[1..]
     }
@@ -163,7 +163,7 @@ impl PartialEq<str> for NVarCharSpan<'_> {
 }
 
 impl<'a> NVarCharSpan<'a> {
-    #[inline(always)]
+    #[inline]
     // Pre: buf.len() % 2 == 0
     #[cfg_attr(kani, kani::requires(buf.len() % 2 == 0))]
     // Post: ptr::eq(y.bytes, buf) 
@@ -171,7 +171,7 @@ impl<'a> NVarCharSpan<'a> {
     pub fn new(buf: &'a [u8]) -> Self {
         Self { bytes: buf }
     }
-    #[inline(always)]
+    #[inline]
     pub fn characters(&self) -> usize {
         self.bytes.len() / 2
     }

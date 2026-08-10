@@ -44,7 +44,7 @@ pub enum MessageStateStatus {
 impl core::ops::BitAnd<MessageStateStatus> for u8 {
     type Output = u8;
 
-    #[inline(always)]
+    #[inline]
     fn bitand(self, rhs: MessageStateStatus) -> Self::Output {
         self & (rhs as u8)
     }
@@ -108,7 +108,7 @@ pub struct QueryNotificationHeader {
 impl core::ops::BitAnd<QueryNotificationHeader> for u8 {
     type Output = u8;
 
-    #[inline(always)]
+    #[inline]
     fn bitand(self, _rhs: QueryNotificationHeader) -> Self::Output {
         self & 0x01
     }
@@ -155,7 +155,7 @@ impl TransactionDescriptorHeader {
 impl core::ops::BitAnd<TransactionDescriptorHeader> for u8 {
     type Output = u8;
 
-    #[inline(always)]
+    #[inline]
     fn bitand(self, _rhs: TransactionDescriptorHeader) -> Self::Output {
         self & 0x02
     }
@@ -195,7 +195,7 @@ pub struct TraceActivityHeader {
 impl core::ops::BitAnd<TraceActivityHeader> for u8 {
     type Output = u8;
 
-    #[inline(always)]
+    #[inline]
     fn bitand(self, _rhs: TraceActivityHeader) -> Self::Output {
         self & 0x03
     }
@@ -214,15 +214,15 @@ impl<'a> TraceActivityHeaderSpan<'a> {
         }
         Ok(Self { bytes })
     }
-    #[inline(always)]
+    #[inline]
     pub fn guid_activity_id(&self) -> &'a [u8; 16] {
         self.bytes[..self.ib_activity_sequence()].try_into().unwrap()
     }
-    #[inline(always)]
+    #[inline]
     const fn ib_activity_sequence(&self) -> usize {
         16
     }
-    #[inline(always)]
+    #[inline]
     pub fn activity_sequence(&self) -> u32 {
         r_u32_le(self.bytes, self.ib_activity_sequence())
     }

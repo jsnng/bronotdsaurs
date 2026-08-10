@@ -1,7 +1,7 @@
-use plugins::{Connection, Rows, Row};
-pub struct ConnectionState {
+// use plugins::{Connection, Rows, Row};
+// pub struct ConnectionState {
 
-}
-impl Connection for ConnectionState {
+// }
+// impl Connection for ConnectionState {
 
-}
+// }

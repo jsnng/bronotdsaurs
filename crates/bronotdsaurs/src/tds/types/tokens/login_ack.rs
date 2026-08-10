@@ -1,27 +1,27 @@
 use crate::tds::prelude::*;
 
 impl<'a> LoginAckSpan<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn ty(&self) -> u8 {
         self.bytes[0]
     }
 
-    #[inline(always)]
+    #[inline]
     // length gives the token body size only.
     pub fn length(&self) -> u16 {
         r_u16_le(self.bytes, 1)
     }
-    #[inline(always)]
+    #[inline]
     pub fn interface(&self) -> u8 {
         self.bytes[3]
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn tds_version(&self) -> [u8; 4] {
         [self.bytes[4], self.bytes[5], self.bytes[6],  self.bytes[7]]
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn prog_name(&self) -> NVarCharSpan<'a> {
         NVarCharSpan::new(
             &self.bytes[self.ib_prog_name()..self.ib_prog_name() + self.cch_prog_name() * 2],
@@ -57,12 +57,12 @@ impl<'a> LoginAckSpan<'a> {
         Ok(login_ack)
     }
     // index of prog_name start in self.bytes
-    #[inline(always)]
+    #[inline]
     pub const fn ib_prog_name(&self) -> usize {
         Self::MIN_SPAN_SIZE
     }
     // prog_name char count (unicode)
-    #[inline(always)]
+    #[inline]
     pub fn cch_prog_name(&self) -> usize {
         self.bytes[8] as usize
     }
@@ -79,27 +79,27 @@ pub struct LoginAckToken {
 }
 
 impl LoginAckToken {
-    #[inline(always)]
+    #[inline]
     pub fn ty(&self) -> u8 {
         self.ty
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn length(&self) -> u16 {
         self.length
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn interface(&self) -> u8 {
         self.interface
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn tds_version(&self) -> [u8; 4] {
         self.tds_version
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn prog_name(&self) -> String {
         self.prog_name.clone()
     }

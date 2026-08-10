@@ -103,7 +103,6 @@ impl PreLoginPacket {
 
 #[rustfmt::skip]
 impl<'a> PreLoginSpan<'a> {
-    #[inline(always)]
     // Post: returns `Some` iff there are at least PreLoginHeader::LENGTH bytes and
     // type = ClientMessageType::PreLogin (0x12) or SERVER_PACKET_TYPE (0x04)
     #[cfg_attr(kani, kani::ensures(|x: &Result<Self, DecodeError>|
@@ -133,14 +132,14 @@ impl<'a> PreLoginSpan<'a> {
             ..Default::default()
         })
     }
-    #[inline(always)]
+    #[inline]
     #[cfg_attr(kani, kani::requires(self.bytes.len() >= PreLoginHeader::LENGTH))]
     /// Parses the TDS stream header.
     pub fn header(&self) -> PreLoginHeader {
         PreLoginHeader::from_bytes(&self.bytes[..8].try_into().unwrap_or([0u8;8]))
     }
 
-    #[inline(always)]
+    #[inline]
     #[cfg_attr(kani, kani::requires(self.bytes.len() >= PreLoginHeader::LENGTH))]
     /// Performs a byte slice from the start of the pre-login options section.
     pub fn options(&self) -> PreLoginOptionsSpan<'a> {
@@ -252,7 +251,7 @@ impl<'a> PreLoginOptionSpan<'a> {
 
     /// # Safety
     #[cfg(feature = "unsafe")]
-    #[inline(always)]
+    #[inline]
     // Post: Some if bytes[0] is a valid PLOptionType, None otherwise.
     #[cfg_attr(kani, kani::ensures(|x: &Option<PLOptionType>|
         x.is_some() == (self.bytes[0] <= 0x07 || self.bytes[0] == 0xff)
@@ -265,7 +264,7 @@ impl<'a> PreLoginOptionSpan<'a> {
         None
     }
     #[cfg(not(feature = "unsafe"))]
-    #[inline(always)]
+    #[inline]
     // Post: if Some(x) is returned, then x is BE of bytes[1..2] of self.bytes
     #[cfg_attr(kani, kani::ensures(
         |x: &Option<u16>|
@@ -285,13 +284,13 @@ impl<'a> PreLoginOptionSpan<'a> {
         |x: &Option<u16>|
         *x == Some(u16::from_be_bytes([self.bytes[1], self.bytes[2]]))
     ))]
-    #[inline(always)]
+    #[inline]
     pub unsafe fn offset(&self) -> Option<u16> {
         Some(r_u16_be(self.bytes, 1))
     }
 
     #[cfg(not(feature = "unsafe"))]
-    #[inline(always)]
+    #[inline]
     // Post: if Some(x) is returned, then x is BE of bytes[3..4] of self.bytes
     #[cfg_attr(kani, kani::ensures(
         |x: &Option<u16>|
@@ -311,7 +310,7 @@ impl<'a> PreLoginOptionSpan<'a> {
         |x: &Option<u16>|
         *x == Some(u16::from_be_bytes([self.bytes[3], self.bytes[4]]))
     ))]
-    #[inline(always)]
+    #[inline]
     pub unsafe fn option_length(&self) -> Option<u16> {
         Some(r_u16_be(self.bytes, 3))
     }

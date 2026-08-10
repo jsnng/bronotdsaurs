@@ -45,7 +45,7 @@ pub struct OrderSpanIter<'a> {
 }
 
 impl<'a> OrderSpanIter<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn new(bytes: &'a [u8], remaining: usize) -> Self {
         Self { bytes, remaining }
     }

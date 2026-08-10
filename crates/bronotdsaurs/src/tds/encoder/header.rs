@@ -28,7 +28,7 @@ impl Encoder for QueryNotificationHeader {
 }
 
 impl Encoder for TransactionDescriptorHeader {
-    #[inline(always)]
+    #[inline]
     fn encode(&self, buf: &mut [u8]) -> usize {
         let mut cursor = 0;
         wint!(buf, cursor, u64, self.transaction_descriptor);
@@ -39,7 +39,7 @@ impl Encoder for TransactionDescriptorHeader {
 
 #[cfg(feature = "tds7.4")]
 impl Encoder for TraceActivityHeader {
-    #[inline(always)]
+    #[inline]
     fn encode(&self, buf: &mut [u8]) -> usize {
         let mut cursor = 16;
         buf[..cursor].copy_from_slice(&self.guid_activity_id);

@@ -103,7 +103,7 @@ pub enum ZeroLengthDataType {
 
 impl ZeroLengthDataType {
     // zero-length data types have a length of... 0
-    #[inline(always)]
+    #[inline]
     pub const fn size(&self) -> usize {
         0
     }
@@ -215,7 +215,7 @@ pub struct TypeInfoSpan<'a> {
 }
 
 impl<'a> TypeInfoSpan<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn new(dtype: DataType, bytes: &'a [u8]) -> Self {
         Self { bytes, dtype }
     }

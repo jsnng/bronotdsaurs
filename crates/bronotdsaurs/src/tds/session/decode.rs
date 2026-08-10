@@ -92,7 +92,6 @@ impl LoginResponse {
 
 }
 
-#[inline]
 fn apply_env_change(
     env_change_span: &crate::tds::prelude::EnvChangeSpan<'_>,
     transaction_descriptor: &mut Option<u64>,
@@ -225,7 +224,6 @@ impl StreamingBuffer {
 }
 
 impl<S, T: AsyncTransport, O: Observer<Event>> Session<S, T, O> {
-    #[inline]
     pub(in crate::tds::session) async fn decode_token_stream<M, F>(
         &mut self,
         mut on_col_metadata: M,

@@ -55,20 +55,19 @@ impl Default for SessionBuffer {
 
 impl SessionBuffer {
     /// return the slice of the buffer with unconsumed data: `buffer[head..tail]`
-    #[inline(always)]
+    #[inline]
     pub fn readable(&self) -> &[u8] {
         &self.buffer[self.head..self.tail]
     }
 
     /// return the slice of the buffer available for writing: `buffer[tail..]`:
-    #[inline(always)]
+    #[inline]
     pub fn writeable(&mut self) -> &mut [u8] {
         let max_size = self.buffer_size();
         &mut self.buffer[self.tail..max_size]
     }
 
     /// move head cursor by `n`. Errors if the move is to exceed the tail cursor.
-    #[inline(always)]
     pub fn head(&mut self, n: usize) -> Result<(), SessionError> {
         if self.head + n > self.tail {
             return Err(SessionError::BufferIndexOutOfBoundsError(
@@ -87,7 +86,6 @@ impl SessionBuffer {
     }
 
     /// move tail cursor by `n`. Errors if the move exceeds `size` if `size.is_some()` or `BUFFER_SIZE`
-    #[inline(always)]
     pub fn tail(&mut self, n: usize) -> Result<(), SessionError> {
         let max_size = self.buffer_size();
         if self.tail + n > max_size {
@@ -107,19 +105,19 @@ impl SessionBuffer {
     }
 
     /// return the number of unconsumed bytes in the buffer
-    #[inline(always)]
+    #[inline]
     pub fn len(&self) -> usize {
         self.tail - self.head
     }
 
     /// return true if number of consumable bytes is 0
-    #[inline(always)]
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// move the head and tail cursors to 0.
-    #[inline(always)]
+    #[inline]
     pub fn reset(&mut self) {
         self.head = 0;
         self.tail = 0;
@@ -135,7 +133,7 @@ impl SessionBuffer {
     }
 
     /// the current maximum writeable size: the negotiated `size`, or `BUFFER_SIZE` if unset.
-    #[inline(always)]
+    #[inline]
     pub fn buffer_size(&self) -> usize {
         self.size.unwrap_or(BUFFER_SIZE)
     }
@@ -256,7 +254,6 @@ where
     M::Header: Default,
 {
     type Error = SessionError;
-    #[inline]
     async fn send(&mut self, msg: M) -> Result<(), Self::Error> {
         self.buffer.reset();
         let len = msg.oneshot(&mut self.buffer, &mut M::Header::default())?;

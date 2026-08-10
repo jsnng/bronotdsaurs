@@ -13,7 +13,7 @@ pub enum TokenType {
 }
 
 impl TokenType {
-    #[inline(always)]
+    #[inline]
     pub const fn mask() -> u8 {
         0x30
     }

@@ -110,32 +110,32 @@ impl OptionFlag1 {
     }
     pub const F_BYTE_ORDER_X86: bool = false;
     pub const F_BYTE_ORDER_68000: bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_byte_order(&self) -> bool { self.0 & 0x01 != 0 } // bit
     pub const F_CHAR_CHARSET_ASCII: bool = false;
     pub const F_CHAR_CHARSET_EBCDIC: bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_char(&self) -> bool { self.0 & 0x02 != 0 } // bit
     pub const F_FLOAT_IEEE_754: u8 = 0x00;
     pub const F_FLOAT_VAX: u8 = 0x01;
     pub const F_FLOAT_ND5000: u8 = 0x02;
-    #[inline(always)]
+    #[inline]
     pub fn f_float(&self) -> u8 { (self.0 & 0x0c) >> 2 } // 2 bit
     pub const F_DUMPLOAD_ON : bool = false;
     pub const F_DUMPLOAD_OFF : bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_dump_load(&self) -> bool { self.0 & 0x10 != 0 } // bit
     pub const F_USE_DB_OFF : bool = false;
     pub const F_USE_DB_ON : bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_use_db(&self) -> bool { self.0 & 0x20 != 0 } // bit
     pub const F_DATABASE_WARN : bool = false;
     pub const F_DATABASE_FATAL : bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_database(&self) -> bool { self.0 & 0x40 != 0 } // bit
     pub const F_SET_LANG_OFF : bool = false;
     pub const F_SET_LANG_ON : bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_set_lang(&self) -> bool { self.0 & 0x80 != 0 } // bit
 }
 
@@ -163,27 +163,27 @@ impl OptionFlag2 {
     }
     pub const F_INIT_LANG_WARN: bool = false;
     pub const F_INIT_LANG_FATAL: bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_language(&self) -> bool { self.0 & 0x01 != 0} // bit
     pub const F_ODBC_OFF: bool = false;
     pub const F_ODBC_ON: bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_odbc(&self) -> bool { self.0 & 0x02 != 0} // bit
-    #[inline(always)]
+    #[inline]
     #[cfg(all(feature = "tds7.1", not(feature = "tds7.2")))]
     pub fn f_trans_boundary(&self) -> bool { self.0 & 0x04 != 0} // bit
-    #[inline(always)]
+    #[inline]
     #[cfg(all(feature = "tds7.1", not(feature = "tds7.2")))]
     pub fn f_cache_connect(&self) -> bool { self.0 & 0x08 != 0} // bit
     pub const F_USER_TYPE_NORMAL: u8 = 0x00;
     pub const F_USER_TYPE_SERVER: u8 = 0x01;
     pub const F_USER_TYPE_REMUSER: u8 = 0x02;
     pub const F_USER_TYPE_SQLREPL: u8 = 0x03;
-    #[inline(always)]
+    #[inline]
     pub fn f_user_type(&self) -> u8 { (self.0 & 0x70) >> 4 } // 3bit
     pub const F_INT_SECURITY_OFF: bool = false;
     pub const F_INT_SECURITY_ON: bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_int_security(&self) -> bool { self.0 & 0x80 != 0} // bit
 }
 
@@ -197,7 +197,7 @@ impl TypeFlag {
     }
     pub const F_SQL_DFLT: bool = false;
     pub const F_SQL_TSQL: bool = true;
-    #[inline(always)]
+    #[inline]
     pub fn f_sql_type(&self) -> u8 {
         self.0 & 0x0f
     } // 4bit
@@ -206,12 +206,12 @@ impl TypeFlag {
     #[cfg(feature = "tds7.2")]
     pub const F_OLEDB_ON: bool = true;
     #[cfg(feature = "tds7.2")]
-    #[inline(always)]
+    #[inline]
     pub fn f_oledb(&self) -> bool {
         self.0 & 0x10 != 0
     } // bit
     #[cfg(feature = "tds7.4")]
-    #[inline(always)]
+    #[inline]
     pub fn f_read_only_intent(&self) -> bool {
         self.0 & 0x20 != 0
     } // bit
@@ -232,24 +232,24 @@ impl OptionFlag3 {
 
         Self(options_flag3)
     }
-    #[inline(always)]
+    #[inline]
     pub fn f_change_password(&self) -> bool {
         self.0 & 0x01 != 0
     } // bit
-    #[inline(always)]
+    #[inline]
     pub fn f_user_instance(&self) -> bool {
         self.0 & 0x02 != 0
     } // bit
-    #[inline(always)]
+    #[inline]
     pub fn f_send_yukon_binary_xml(&self) -> bool {
         self.0 & 0x04 != 0
     } // bit
-    #[inline(always)]
+    #[inline]
     #[cfg(feature = "tds7.3")]
     pub fn f_unknown_collation_handling(&self) -> bool {
         self.0 & 0x08 != 0
     } // bit
-    #[inline(always)]
+    #[inline]
     #[cfg(feature = "tds7.4")]
     pub fn f_extension(&self) -> bool {
         self.0 & 0x10 != 0
@@ -396,7 +396,7 @@ pub struct VectorSupportData {
 
 #[cfg(feature = "tds7.4")]
 impl<'a> FeatureExtAckSpan<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
         if bytes.len() < 6 { return Err(DecodeError::InvalidData("".to_string())) }
         Ok(Self { bytes })

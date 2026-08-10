@@ -75,27 +75,27 @@ impl<'a> TableValuedParameterSpan<'a> {
         })
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn typename(&self) -> TVPTypeNameSpan<'a> {
         self.typename
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn col_metadata(&self) -> ColMetaDataSpan<'a> {
         self.col_metadata.clone()
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn order_unique(&self) -> Option<TVPOrderUniqueSpan<'a>> {
         self.order_unique
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn column_ordering(&self) -> Option<TVPColumnOrderingSpan<'a>> {
         self.column_ordering
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn rows(&self) -> &'a [u8] {
         &self.bytes[self.ib_rows..]
     }
@@ -157,17 +157,17 @@ impl<'a> TVPTypeNameSpan<'a> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     const fn ib_db_name(&self) -> usize {
         1
     }
 
-    #[inline(always)]
+    #[inline]
     fn cch_db_name(&self) -> usize {
         self.bytes[0].into()
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn owning_schema(&self) -> NVarCharSpan<'a> {
         NVarCharSpan {
             bytes: &self.bytes
@@ -175,29 +175,29 @@ impl<'a> TVPTypeNameSpan<'a> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn ib_owning_schema(&self) -> usize {
         self.ib_db_name() + self.cch_db_name() * 2 + 1
     }
 
-    #[inline(always)]
+    #[inline]
     fn cch_owning_schema(&self) -> usize {
         self.bytes[self.ib_db_name() + self.cch_db_name() * 2].into()
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn type_name(&self) -> NVarCharSpan<'a> {
         NVarCharSpan {
             bytes: &self.bytes[self.ib_type_name()..self.ib_type_name() + self.cch_type_name() * 2],
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn ib_type_name(&self) -> usize {
         self.ib_owning_schema() + self.cch_owning_schema() * 2 + 1
     }
 
-    #[inline(always)]
+    #[inline]
     fn cch_type_name(&self) -> usize {
         self.bytes[self.ib_owning_schema() + self.cch_owning_schema() * 2].into()
     }
@@ -206,22 +206,22 @@ impl<'a> TVPTypeNameSpan<'a> {
 impl<'a> TVPOrderingUniqueItemSpan<'a> {
     pub const LENGTH: usize = 3;
 
-    #[inline(always)]
+    #[inline]
     pub fn col_num(&self) -> u16 {
         r_u16_le(self.bytes, 0)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn f_order_asc(&self) -> bool {
         (self.bytes[2] >> 1) & 0x1 == 1
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn f_order_desc(&self) -> bool {
         (self.bytes[2] >> 2) & 0x1 == 1
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn f_unique(&self) -> bool {
         (self.bytes[2] >> 3) & 0x1 == 1
     }
@@ -259,7 +259,7 @@ pub struct TVPOrderUniqueSpanIter<'a> {
 }
 
 impl<'a> TVPOrderUniqueSpan<'a> {
-    #[inline(always)]
+    #[inline]
     fn count(&self) -> usize {
         r_u16_le(self.bytes, 0) as usize
     }
@@ -299,7 +299,7 @@ impl<'a> Iterator for TVPOrderUniqueSpanIter<'a> {
 }
 
 impl<'a> TVPColumnOrderingSpan<'a> {
-    #[inline(always)]
+    #[inline]
     fn count(&self) -> usize {
         r_u16_le(self.bytes, 0) as usize
     }
@@ -308,7 +308,7 @@ impl<'a> TVPColumnOrderingSpan<'a> {
 impl<'a> TVPColumnOrderingItemSpan<'a> {
     const LENGTH: usize = 3;
 
-    #[inline(always)]
+    #[inline]
     pub fn col_num(&self) -> u16 {
         r_u16_le(self.bytes, 0)
     }

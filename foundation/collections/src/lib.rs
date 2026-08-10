@@ -63,7 +63,7 @@ impl<const N: usize> SmallBytes<N> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn as_slice(&self) -> &[u8] {
         match self {
             Self::Stack { elements, length } => &elements[..*length],
@@ -71,7 +71,7 @@ impl<const N: usize> SmallBytes<N> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn to_vec(&self) -> Vec<u8> {
         self.as_slice().to_vec()
     }

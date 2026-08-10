@@ -71,7 +71,7 @@ fn derive_tryfrom_into_format_impl(ast: DeriveInput) -> TokenStream {
             pub const COUNT: usize = #count;
             /// Zero-allocation lookup — returns `None` for unknown values.
             /// Use this in hot paths. Use `TryFrom` when you need an error message.
-            #[inline(always)]
+            #[inline]
             pub fn from_u8(val: #ty) -> Option<Self> {
                 match val {
                     #(
@@ -92,7 +92,7 @@ fn derive_tryfrom_into_format_impl(ast: DeriveInput) -> TokenStream {
         }
         #(#cfg_attrs)*
         impl From<#ident> for #ty {
-            #[inline(always)]
+            #[inline]
             fn from(val: #ident) -> Self { val as #ty }
         }
         #(#cfg_attrs)*

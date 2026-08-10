@@ -15,12 +15,12 @@ impl<'a> ReturnStatusSpan<'a> {
         Ok(Self { bytes })
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn ty(&self) -> u8 {
         self.bytes[0]
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn val(&self) -> i32 {
         r_i32_le(self.bytes, 1)
     }

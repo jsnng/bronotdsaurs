@@ -128,14 +128,14 @@ impl<'a> EnvChangeSpan<'a> {
         EnvChangeType::from_u8(self.bytes[3])
     }
 
-    #[inline(always)]
+    #[inline]
     // length gives the token body size only.
     pub fn length(&self) -> u16 {
         let cursor: usize = 1;
         r_u16_le(self.bytes, cursor)
     }
 
-    #[inline(always)]
+    #[inline]
     // Post:
     #[cfg_attr(kani, kani::ensures(|_| true))]
     pub fn env_value_data(&self) -> &'a [u8] {
@@ -146,14 +146,13 @@ impl<'a> EnvChangeSpan<'a> {
         &[]
     }
 
-    #[inline(always)]
+    #[inline]
     const fn ib_env_value_data(&self) -> usize {
         Self::FIXED_SPAN_SIZE
     }
 
     /// Read the length prefix at `ib` and scale it by the type's multiplier.
     /// B_VARCHAR types store char counts (×2 for UTF-16), B_VARBYTE types store raw byte counts.
-    #[inline(always)]
     fn cch_at(&self, ib: usize) -> Result<usize, DecodeError> {
         let multiplier = match self.ty() {
             #[allow(deprecated)]
@@ -192,7 +191,7 @@ impl<'a> EnvChangeSpan<'a> {
         Ok(self.bytes[ib] as usize * multiplier)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn ib_new_value(&self) -> Result<usize, DecodeError> {
         Ok(self.ib_env_value_data() + 1)
     }
