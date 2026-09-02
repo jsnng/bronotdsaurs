@@ -32,11 +32,11 @@ impl<'a> Decode<'a> for PreLoginSpan<'a> {
 
             let cursor = PreLoginHeader::LENGTH + offset;
 
-            if buf.len() < offset + len {
+            if buf.len() < cursor + len {
                 return Err(DecodeError::UnexpectedEof(format!(
-                    "PreLoginSpan populate() buf.len()={} < offset+len={}",
+                    "PreLoginSpan populate() buf.len()={} < cursor+len={}",
                     buf.len(),
-                    offset + len
+                    cursor + len
                 )));
             }
 
@@ -47,7 +47,7 @@ impl<'a> Decode<'a> for PreLoginSpan<'a> {
                 Some(PLOptionType::Encryption) if len == 1 => {
                     span.encryption = Some(&buf[cursor..cursor + 1]);
                 }
-                Some(PLOptionType::InstOpt) => {
+                Some(PLOptionType::InstOpt) if len >= 1 => {
                     span.inst_opt = Some(&buf[cursor..cursor + 1]);
                 }
                 Some(PLOptionType::ThreadId) if len == 4 => {
@@ -59,8 +59,12 @@ impl<'a> Decode<'a> for PreLoginSpan<'a> {
                 }
                 #[cfg(not(feature = "smp"))]
                 Some(PLOptionType::Mars) => {}
-                Some(PLOptionType::Version | PLOptionType::Encryption | PLOptionType::ThreadId) => {
-                }
+                Some(
+                    PLOptionType::Version
+                    | PLOptionType::Encryption
+                    | PLOptionType::InstOpt
+                    | PLOptionType::ThreadId,
+                ) => {}
                 Some(PLOptionType::Terminator) => unreachable!(),
                 _ => {
                     return Err(DecodeError::InvalidField(format!(

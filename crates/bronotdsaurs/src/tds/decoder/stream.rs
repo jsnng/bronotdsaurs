@@ -49,9 +49,9 @@ impl Drainable for Row {
     fn steps(buf: &[u8], strides: &[u8]) -> Option<usize> {
         let mut cursor = 1usize;
         for &stride in strides {
-            match walk(buf, cursor, stride) {
-                Some(w) => cursor += w,
-                None => return None,
+            {
+                let w = walk(buf, cursor, stride)?;
+                cursor += w
             }
         }
         if cursor > buf.len() { return None; }
@@ -68,10 +68,8 @@ impl Drainable for NbcRow {
         for (i, &stride) in strides.iter().enumerate() {
             let is_null = buf[1 + i / 8] >> (i % 8) & 1 == 1;
             if !is_null {
-                match walk(buf, cursor, stride) {
-                    Some(w) => cursor += w,
-                    None => return None,
-                }
+                let w = walk(buf, cursor, stride)?;
+                cursor += w
             }
         }
         if cursor > buf.len() { return None; }
@@ -130,9 +128,6 @@ pub enum ContextRequiredStep<'a> {
 }
 
 
-/// See: 2.2.7 Packet Data Token Stream Definition
-/// Decoder for token-based packet data streams.
-/// This is implemented as a custom typestate iterator.
 impl<'a> TokenDecoder<'a, NoContext> {
     pub fn new(buf: &'a [u8]) -> Self {
         Self {
@@ -141,8 +136,7 @@ impl<'a> TokenDecoder<'a, NoContext> {
         }
     }
 
-    /// General-purpose one-token-at-a-time stepper. "catch-all" function for stream token parsing.
-    pub fn advance(self) -> Option<NoContextStep<'a>> {
+        pub fn advance(self) -> Option<NoContextStep<'a>> {
         let mut buf = self.buf;
         loop {
             if buf.is_empty() {
@@ -272,7 +266,6 @@ impl<'a> TokenDecoder<'a, NoContext> {
                             Err(e) => Some(NoContextStep::Error(e)),
                         },
                         _ => {
-                            // Skip unhandled variable-length tokens (TabName, ColInfo, Order, etc.)
                             buf = next_buf;
                             continue;
                         }
@@ -284,34 +277,19 @@ impl<'a> TokenDecoder<'a, NoContext> {
 }
 
 impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
-    /// Consumes the decoder and returns the column metadata span it was carrying.
-    ///
-    /// The span still borrows the underlying stream buffer (`'a`), so it is only
-    /// valid until the next buffer refill — call `.own()` on it to keep the
-    /// metadata across refills, then use [`TokenDecoder::resume`] to continue
-    /// row decoding with it.
-    #[inline]
+                            #[inline]
     pub fn into_col_metadata(self) -> ColMetaDataSpan<'a> {
         self.state.col_metadata
     }
 
-    /// Reconstructs a `ContextRequired` decoder positioned at `buf` using the given column
-    /// metadata. Use this to resume row decoding after a buffer refill without re-scanning
-    /// the column metadata token.
-    #[inline]
+                #[inline]
     pub fn resume(buf: &'a [u8], col_metadata: ColMetaDataSpan<'a>) -> Self {
         Self {
             buf,
             state: ContextRequired { col_metadata },
         }
     }
-    /// Drains ROW/NBCROW tokens from the buffer. Returns `(done_span, bytes_consumed)`.
-    /// `bytes_consumed` counts from the start of `self.buf` up to and including
-    /// the DONE token if one was found, or up to the stall point otherwise.
-    ///
-    /// Handles both ROW (0xD1) and NBCROW (0xD2) tokens — SQL Server may freely
-    /// mix them within a single result set (NBCROW for rows with many NULLs).
-    pub fn drain<F: FnMut(&'a [u8])>(self, mut f: F) -> (Option<DoneSpan<'a>>, usize) {
+                            pub fn drain<F: FnMut(&'a [u8])>(self, mut f: F) -> (Option<DoneSpan<'a>>, usize) {
         let original_length: usize = self.buf.len();
         let mut buf = self.buf;
         let strides = self.state.col_metadata.strides_as_slice();
@@ -343,8 +321,7 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
         }
     }
 
-    /// The ContextRequiredStep version of advance().
-    pub fn advance(self) -> Option<ContextRequiredStep<'a>> {
+        pub fn advance(self) -> Option<ContextRequiredStep<'a>> {
         let mut buf = self.buf;
         loop {
             if buf.is_empty() {
@@ -353,7 +330,8 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
             let ty = DataTokenType::LUT[buf[0] as usize];
             match ty {
                 DataTokenType::ROW => {
-                    if let Some(cursor) = Row::steps(buf, self.state.col_metadata.strides_as_slice()) {
+                    {
+                        let cursor = Row::steps(buf, self.state.col_metadata.strides_as_slice())?;
                         return Some(ContextRequiredStep::Row(
                             RowSpan {
                                 bytes: &buf[..cursor],
@@ -363,13 +341,11 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
                                 state: self.state,
                             },
                         ));
-                    } else {
-                        return None
                     }
                 }
                 #[cfg(feature = "tds7.3b")]
                 DataTokenType::NBC_ROW => {
-                    if let Some(cursor) = NbcRow::steps(buf, self.state.col_metadata.strides_as_slice()) {
+                        let cursor = NbcRow::steps(buf, self.state.col_metadata.strides_as_slice())?;
                         return Some(ContextRequiredStep::NbcRow(
                             NbcRowSpan {
                                 bytes: &buf[..cursor],
@@ -379,9 +355,6 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
                                 state: self.state,
                             },
                         ));
-                    } else {
-                        return None
-                    }
                 }
                 DataTokenType::DONE => {
                     let length = DoneSpan::FIXED_SPAN_SIZE;
@@ -415,7 +388,6 @@ impl<'a> TokenDecoder<'a, ContextRequired<'a>> {
                     buf = &buf[ReturnStatusSpan::FIXED_SPAN_SIZE..];
                 }
                 _ => {
-                    // Skip variable-length tokens with u16 length prefix (Order, TabName, ColInfo, etc.)
                     let skip = var_len_token_size(buf)?;
                     buf = &buf[skip..];
                 }
