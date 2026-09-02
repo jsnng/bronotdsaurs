@@ -5,7 +5,7 @@ edition = "2024"
 license = "MIT"
 
 [dependencies]
-aws-lc-sys = { version = "0.41", optional = true }
+aws-lc-sys = { version = "0.42", optional = true }
 rustls = { version = "0.23.40", features = ["std"], optional = true }
 rustls-pki-types = { version = "1.14.1", optional = true }
 webpki-roots = { version = "1.0.6", optional = true}
